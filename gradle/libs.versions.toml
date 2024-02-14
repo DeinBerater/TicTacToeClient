@@ -39,6 +39,7 @@ ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "k
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorVersion" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientCore" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktorVersion" }
+ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktorVersion" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

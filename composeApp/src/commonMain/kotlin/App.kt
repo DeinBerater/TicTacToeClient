@@ -10,6 +10,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import game.Game
 import kotlinx.coroutines.launch
 
 @Composable
@@ -20,19 +21,14 @@ fun App() {
     val game = Game()
     val player = Player(game, scope)
 
-    scope.launch {
-        player.makeWebRequest()
-    }
-
     MaterialTheme {
 
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally)
         {
             var timesUpdated by remember { mutableStateOf("") }
 
-            Text("Game: ${game.gameCount}")
             Text("On turn: ${game.onTurn}")
-            Text("Extra info: ${game.extraInfo}")
+            Text("Symbol: ${game.symbol}")
 
             Text(timesUpdated) // This is needed to update the ui on game changes..
 
@@ -43,7 +39,6 @@ fun App() {
                 // Change anything to update the UI.. Little trick (we do not talk about that.)
                 timesUpdated = if (timesUpdated == "") " " else ""
             }
-
 
         }
     }
