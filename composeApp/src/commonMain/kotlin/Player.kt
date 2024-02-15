@@ -16,8 +16,11 @@ class Player(
         scope.launch {
             try {
                 communicator.connectWithWebsocket()
+                println("Now connected to WebSocket!")
+                communicator.initializeEventListeners(scope)
             } catch (e: Exception) {
                 updateChannel.send("Cannot connect to WebSocket: ${e::class.simpleName}")
+                e.printStackTrace()
                 return@launch
             }
 
@@ -32,6 +35,7 @@ class Player(
                 return
             }
 
+            println("Received data from server: ${incoming.toList()}")
             // ToDo: Do action when bytes arrive
             val type = ByteDeconstructor(incoming).readInt(3)
         }

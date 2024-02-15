@@ -29,6 +29,21 @@ class GameTest {
     }
 
     @Test
+    fun hasOpponent() {
+        val sut = Game()
+
+        assertFalse(sut.hasOpponent)
+    }
+
+    @Test
+    fun setOpponent() {
+        val sut = Game()
+        sut.hasOpponent = true
+
+        assertTrue(sut.hasOpponent)
+    }
+
+    @Test
     fun getSymbolBeginning() {
         val sut = Game()
 

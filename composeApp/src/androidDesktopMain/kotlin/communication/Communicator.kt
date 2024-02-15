@@ -23,7 +23,7 @@ class Communicator : BaseCommunicator() {
         val client = HttpClient(CIO) {
             install(WebSockets)
         }
-        client.webSocket("http://localhost/") {
+        client.webSocket("ws://192.168.178.121:80") {
             websocketSession = this
 
             for (frame in incoming) {

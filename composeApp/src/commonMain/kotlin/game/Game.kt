@@ -6,7 +6,7 @@ import game.exceptions.NotOnTurnException
 
 class Game {
     init {
-        println("Game created")
+        println("Game created.")
     }
 
     /** If the player playing this game is on turn */
@@ -18,6 +18,8 @@ class Game {
     /** If this game is currently active, meaning if symbols can be placed */
     var gameActive: Boolean = false
         private set
+
+    var hasOpponent: Boolean = false
 
     private val fields = MutableList<TicTacToeSymbol?>(9) { _ -> null }
 

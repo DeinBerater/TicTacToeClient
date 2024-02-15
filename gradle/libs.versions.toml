@@ -10,6 +10,7 @@ androidx-core-ktx = "1.12.0"
 androidx-espresso-core = "3.5.1"
 androidx-material = "1.11.0"
 androidx-test-junit = "1.1.5"
+buildkonfigGradlePlugin = "latest_version"
 compose = "1.6.1"
 compose-plugin = "1.6.0-alpha01"
 junit = "4.13.2"
@@ -20,6 +21,7 @@ ktorClientCore = "2.3.8"
 ktorVersion = "2.3.7"
 
 [libraries]
+buildkonfig-gradle-plugin = { module = "com.codingfeline.buildkonfig:buildkonfig-gradle-plugin", version.ref = "buildkonfigGradlePlugin" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -39,6 +41,7 @@ ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "k
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktorVersion" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorClientCore" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktorVersion" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktorVersion" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktorVersion" }
 
 [plugins]

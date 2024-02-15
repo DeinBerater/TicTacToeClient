@@ -10,8 +10,6 @@ plugins {
 
 kotlin {
 
-    val ktorVersion = "2.3.7"
-
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
         moduleName = "composeApp"
@@ -75,7 +73,6 @@ kotlin {
 //        wasmJsMain.dependencies {
 //            implementation(libs.ktor.client.js)
 //        }
-
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)

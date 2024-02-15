@@ -1,5 +1,6 @@
 package communication
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 
 abstract class BaseCommunicator {
@@ -14,6 +15,9 @@ abstract class BaseCommunicator {
      * Throws an exception if something didn't work with that.
      * */
     abstract suspend fun connectWithWebsocket()
+
+    // This is just used in wasm, but needed to be called from above
+    open suspend fun initializeEventListeners(scope: CoroutineScope) {}
 
     fun sendSubmitGameCode(gameCode: String) {
 

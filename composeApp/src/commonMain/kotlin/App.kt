@@ -36,6 +36,8 @@ fun App() {
                 // Wait for the channel to demand an UI update
                 val exceptionMessage = player.updateChannel.receive()
                 if (exceptionMessage != null) {
+                    println("An exception occurred:")
+                    println(exceptionMessage)
                     // Exception handling
                     return@launch
                 }
