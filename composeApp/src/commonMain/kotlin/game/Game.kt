@@ -17,8 +17,18 @@ class Game {
 
     /** If this game is currently active, meaning if symbols can be placed */
     var gameActive: Boolean = false
+        private set
 
     private val fields = MutableList<TicTacToeSymbol?>(9) { _ -> null }
+
+    fun setGameActive(symbol: TicTacToeSymbol) {
+        gameActive = true
+        this.symbol = symbol
+    }
+
+    fun deactivateGame() {
+        gameActive = false
+    }
 
     /** Sets a symbol on the board (make a move)
      * @param position the position to set a symbol on
@@ -36,7 +46,7 @@ class Game {
         if (!gameActive) throw GameNotActiveException()
         if (!opponent && !onTurn) throw NotOnTurnException()
         if (fields[position] != null) throw FieldAlreadyOccupiedException()
-        fields[position] = if (onTurn) symbol else symbol?.other()
+        fields[position] = if (!opponent) symbol else symbol?.other()
     }
 
     /** Updates the board with full data
@@ -51,6 +61,7 @@ class Game {
     /** Gets the symbol by coordinates (starting at top-left corner with 0, 0)
      * */
     fun getSymbolByCoords(x: Int, y: Int): TicTacToeSymbol? {
+        if (x !in 0..2 || y !in 0..2) throw IllegalArgumentException()
         val index = 3 * y + x
         return fields[index]
     }

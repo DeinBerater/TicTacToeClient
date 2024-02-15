@@ -1,3 +1,4 @@
+import communication.ByteDeconstructor
 import communication.createCommunicator
 import game.Game
 import kotlinx.coroutines.CoroutineScope
@@ -8,26 +9,37 @@ class Player(
     private val game: Game,
     private val scope: CoroutineScope
 ) {
-    val updateChannel = Channel<Unit>()
+    val updateChannel = Channel<String?>()
     private val communicator = createCommunicator()
 
     init {
         scope.launch {
-            communicator.connectWithWebsocket()
+            try {
+                communicator.connectWithWebsocket()
+            } catch (e: Exception) {
+                updateChannel.send("Cannot connect to WebSocket: ${e::class.simpleName}")
+                return@launch
+            }
+
             listenToIncomingBytes()
         }
     }
 
     private suspend fun listenToIncomingBytes() {
         for (incoming in communicator.bytesIncoming) {
-            // Do action when bytes arrive
-            val type = incoming.readInt(3)
+            if (incoming == null) {
+                updateChannel.send("Due to an error, the connection has been closed.")
+                return
+            }
+
+            // ToDo: Do action when bytes arrive
+            val type = ByteDeconstructor(incoming).readInt(3)
         }
     }
 
     private fun updateUi() {
         scope.launch {
-            updateChannel.send(Unit)
+            updateChannel.send(null)
         }
     }
 

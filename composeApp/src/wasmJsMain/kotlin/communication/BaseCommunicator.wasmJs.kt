@@ -5,7 +5,7 @@ class Communicator : BaseCommunicator() {
         TODO("Not yet implemented")
     }
 
-    override suspend fun sendBytes(bytes: ByteArray) {
+    override fun sendBytes(bytes: ByteArray) {
         TODO("Not yet implemented")
     }
 

@@ -34,7 +34,11 @@ fun App() {
 
             scope.launch {
                 // Wait for the channel to demand an UI update
-                player.updateChannel.receive()
+                val exceptionMessage = player.updateChannel.receive()
+                if (exceptionMessage != null) {
+                    // Exception handling
+                    return@launch
+                }
 
                 // Change anything to update the UI.. Little trick (we do not talk about that.)
                 timesUpdated = if (timesUpdated == "") " " else ""
