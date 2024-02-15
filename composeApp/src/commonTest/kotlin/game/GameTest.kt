@@ -44,6 +44,22 @@ class GameTest {
     }
 
     @Test
+    fun gameCode() {
+        val sut = Game()
+
+        assertNull(sut.gameCode)
+    }
+
+    @Test
+    fun setGameCode() {
+        val sut = Game()
+        val gameCode = "ABCDE"
+        sut.gameCode = gameCode
+
+        assertEquals(gameCode, sut.gameCode)
+    }
+
+    @Test
     fun getSymbolBeginning() {
         val sut = Game()
 

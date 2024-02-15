@@ -29,6 +29,9 @@ fun App() {
 
             Text("On turn: ${game.onTurn}")
             Text("Symbol: ${game.symbol}")
+            Text("Opponent connected: ${game.hasOpponent}")
+            Text("Game Code: ${game.gameCode}")
+            Text("First: " + game.getSymbolByCoords(0, 0))
 
             Text(timesUpdated) // This is needed to update the ui on game changes..
 

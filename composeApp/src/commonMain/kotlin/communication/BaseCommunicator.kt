@@ -16,7 +16,6 @@ abstract class BaseCommunicator {
      * */
     abstract suspend fun connectWithWebsocket()
 
-    // This is just used in wasm, but needed to be called from above
     open suspend fun initializeEventListeners(scope: CoroutineScope) {}
 
     fun sendSubmitGameCode(gameCode: String) {

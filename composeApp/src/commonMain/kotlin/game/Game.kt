@@ -20,6 +20,13 @@ class Game {
         private set
 
     var hasOpponent: Boolean = false
+        set(value) {
+            if (!value) deactivateGame()
+            field = value
+        }
+
+    /** The game code */
+    var gameCode: String? = null
 
     private val fields = MutableList<TicTacToeSymbol?>(9) { _ -> null }
 

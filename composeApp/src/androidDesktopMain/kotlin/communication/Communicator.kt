@@ -24,9 +24,10 @@ class Communicator : BaseCommunicator() {
             install(WebSockets)
         }
         client.webSocket("ws://192.168.178.121:80") {
+            println("Connection established.")
             websocketSession = this
 
-            for (frame in incoming) {
+            for (frame in websocketSession.incoming) {
                 if (frame !is Frame.Binary) {
                     println("Error: Received non-binary frame but expected binary!!!")
                     continue

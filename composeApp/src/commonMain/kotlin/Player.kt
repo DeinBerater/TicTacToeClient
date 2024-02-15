@@ -1,6 +1,7 @@
 import communication.ByteDeconstructor
 import communication.createCommunicator
 import game.Game
+import game.TicTacToeSymbol
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -15,29 +16,18 @@ class Player(
     init {
         scope.launch {
             try {
+                println("Trying to connect with WebSocket...")
                 communicator.connectWithWebsocket()
-                println("Now connected to WebSocket!")
                 communicator.initializeEventListeners(scope)
             } catch (e: Exception) {
-                updateChannel.send("Cannot connect to WebSocket: ${e::class.simpleName}")
+                updateChannel.send("Error in WebSocket connection: ${e::class.simpleName}")
                 e.printStackTrace()
                 return@launch
             }
-
-            listenToIncomingBytes()
+            communicator.initializeEventListeners(scope)
         }
-    }
-
-    private suspend fun listenToIncomingBytes() {
-        for (incoming in communicator.bytesIncoming) {
-            if (incoming == null) {
-                updateChannel.send("Due to an error, the connection has been closed.")
-                return
-            }
-
-            println("Received data from server: ${incoming.toList()}")
-            // ToDo: Do action when bytes arrive
-            val type = ByteDeconstructor(incoming).readInt(3)
+        scope.launch {
+            listenToIncomingBytes()
         }
     }
 
@@ -45,6 +35,83 @@ class Player(
         scope.launch {
             updateChannel.send(null)
         }
+    }
+
+    private suspend fun listenToIncomingBytes() {
+        println("Listening to incoming bytes...")
+        for (incoming in communicator.bytesIncoming) {
+            if (incoming == null) {
+                updateChannel.send("Due to an error, the connection has been closed.")
+                return
+            }
+
+            println("Received data from server: ${incoming.toList()}")
+
+            val byteDeconstructor = ByteDeconstructor(incoming)
+
+            try {
+
+                when (byteDeconstructor.readInt(3)) {
+                    0 -> onWelcome(byteDeconstructor) // Welcome
+                    1 -> updateChannel.send("Sorry, there was a problem with receiving data :/") // PacketInvalid
+                    2 -> onOpponentMakeMove(
+                        byteDeconstructor.readInt(4),
+                        byteDeconstructor.readBoolean()
+                    ) // OpponentMakeMove
+                    3 -> game.hasOpponent = false // Opponentleave
+                    4 -> updateGame(byteDeconstructor) // GameInfo
+                    5 -> updateChannel.send("You cannot do this right now.") // ActionInvalid
+                    6 -> updateChannel.send("This game code is invalid.") // GameCodeInvalid
+                    7 -> updateChannel.send("The game is full, please wait or join another game.") // GameFull
+                }
+            } catch (e: Exception) {
+                updateChannel.send("Something went wrong...")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun onWelcome(byteDeconstructor: ByteDeconstructor) {
+        var gameCode = ""
+        repeat(5) {
+            val char = 'A' + byteDeconstructor.readInt(5)
+            gameCode += char
+        }
+        game.gameCode = gameCode
+        updateUi()
+    }
+
+    private fun onOpponentMakeMove(position: Int, justWon: Boolean) {
+        game.makeMove(position, true)
+
+        // ToDo: Handle just won
+
+        updateUi()
+    }
+
+    private fun updateGame(byteDeconstructor: ByteDeconstructor) {
+        val symbol = getSymbolByBoolean(byteDeconstructor.readBoolean())
+        game.onTurn = byteDeconstructor.readBoolean()
+        game.hasOpponent = byteDeconstructor.readBoolean()
+        if (byteDeconstructor.readBoolean()) game.setGameActive(symbol) else game.symbol = symbol
+
+        val boardFields = mutableListOf<TicTacToeSymbol?>()
+        // Build board
+        repeat(9) {
+            if (!byteDeconstructor.readBoolean()) {
+                boardFields.add(null)
+                return@repeat
+            }
+            boardFields.add(getSymbolByBoolean(byteDeconstructor.readBoolean()))
+        }
+        byteDeconstructor.finish()
+        game.updateBoard(boardFields)
+
+        updateUi()
+    }
+
+    private fun getSymbolByBoolean(boolean: Boolean): TicTacToeSymbol {
+        return if (boolean) TicTacToeSymbol.X else TicTacToeSymbol.O
     }
 
 
