@@ -52,14 +52,14 @@ class Communicator : BaseCommunicator() {
                 try {
                     websocketSession.send(
                         Frame.byType(
-                            false, FrameType.BINARY, bytes,
+                            true, FrameType.BINARY, bytes,
                             rsv1 = false,
                             rsv2 = false,
                             rsv3 = false
                         )
                     )
                 } catch (e: Exception) {
-                    println("Error: Bytes could not be transmitted via the websocket:")
+                    println("Error: Bytes could not be transmitted via the WebSocket:")
                     e.printStackTrace()
 
                     websocketSession.close()

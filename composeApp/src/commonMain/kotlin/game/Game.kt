@@ -58,6 +58,9 @@ class Game {
         if (!opponent && !onTurn) throw NotOnTurnException()
         if (fields[position] != null) throw FieldAlreadyOccupiedException()
         fields[position] = if (!opponent) symbol else symbol?.other()
+
+        // Turns change. If the opponent just made a move, then this player is on turn.
+        onTurn = opponent
     }
 
     /** Updates the board with full data

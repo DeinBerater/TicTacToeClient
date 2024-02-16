@@ -132,6 +132,21 @@ class GameTest {
     }
 
     @Test
+    fun makeMoveTurnChange() {
+        val sut = Game()
+        val symbol = TicTacToeSymbol.O
+
+        sut.setGameActive(symbol)
+
+        val position = 0
+        val opponent = false
+
+        sut.makeMove(position, opponent)
+
+        assertFalse(sut.onTurn)
+    }
+
+    @Test
     fun makeMoveOpponent() {
         val sut = Game()
         val symbol = TicTacToeSymbol.O

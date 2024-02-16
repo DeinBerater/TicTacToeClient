@@ -64,7 +64,9 @@ class Player(
                         byteDeconstructor.readInt(4),
                         byteDeconstructor.readBoolean()
                     ) // OpponentMakeMove
-                    3 -> game.hasOpponent = false // OpponentLeave
+                    3 -> {
+                        game.hasOpponent = false; updateUi()
+                    } // OpponentLeave
                     4 -> updateGame(byteDeconstructor) // GameInfo
                     5 -> updateChannel.send("You cannot do this right now.") // ActionInvalid
                     6 -> onGameCodeInvalid() // GameCodeInvalid
@@ -120,6 +122,7 @@ class Player(
     private suspend fun onGameCodeInvalid() {
         updateChannel.send("This game code is invalid.") // GameCodeInvalid
         lastGameCodeEntered = game.gameCode // Set the last code back for it not to update.
+        updateUi()
     }
 
     private fun getSymbolByBoolean(boolean: Boolean): TicTacToeSymbol {

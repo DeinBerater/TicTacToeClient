@@ -83,7 +83,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             }
 
 
-            var displayedGameCode by remember { mutableStateOf(game.gameCode ?: "-") }
+            var displayedGameCode = game.gameCode ?: "-"
 
             Text(
                 buildAnnotatedString {
@@ -100,7 +100,6 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             fun onCodeSubmit() {
                 try {
                     player.submitGameCode(gameCodeEntered)
-                    displayedGameCode = "..."
                 } catch (e: Exception) {
                     onException(e.message ?: e::class.simpleName ?: "Unknown error.")
                 }
@@ -169,7 +168,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 var resetButtonContent by remember { mutableStateOf("Reset game") }
-                var toggleSymbolButtonContent by remember { mutableStateOf("Toggle Symbol") }
+                var toggleSymbolButtonContent = "Toggle Symbol"
 
                 Button(
                     modifier = Modifier.padding(4.dp).weight(0.5f).fillMaxHeight(0.8F),
