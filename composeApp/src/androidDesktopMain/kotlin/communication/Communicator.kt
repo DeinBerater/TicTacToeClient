@@ -71,6 +71,11 @@ class Communicator : BaseCommunicator() {
         }
     }
 
+    override suspend fun closeWebSocket() {
+        if (!this@Communicator::websocketSession.isInitialized) return
+        websocketSession.close()
+    }
+
 }
 
 actual fun createCommunicator(): BaseCommunicator = Communicator()

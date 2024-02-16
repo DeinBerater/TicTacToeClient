@@ -16,6 +16,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,20 +52,50 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
     val player = Player(scope)
     val game = player.game()
 
-    // Run if there is any exception which should be shown in a popup.
-    fun onException(message: String) {
-        println("An exception occurred:")
-        println(message)
-    }
-
     // ToDo: Implement dark theme
     MaterialTheme {
+
+        val openAlertDialog = remember { mutableStateOf(false) }
+        val lastExceptionMessage = remember { mutableStateOf(null as String?) }
+
+        when {
+            openAlertDialog.value -> {
+                if (lastExceptionMessage.value!!.startsWith("Error in WebSocket connection")) {
+                    alertDialog(
+                        "Websocket connection failed",
+                        lastExceptionMessage.value!!,
+                        "Ok", {
+                            openAlertDialog.value = false
+                        },
+                        "Retry", {
+                            openAlertDialog.value = false
+                            player.restartConnection()
+                        }
+                    )
+                } else {
+                    alertDialog(
+                        "Something went wrong",
+                        lastExceptionMessage.value!!,
+                        "Ok", {
+                            openAlertDialog.value = false
+                        }
+                    )
+                }
+            }
+        }
+
+
+        // Ran if there is any exception which should be shown in a popup.
+        fun onException(message: String) {
+            lastExceptionMessage.value = message
+            openAlertDialog.value = true
+        }
+
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
-        )
-        {
+        ) {
             var timesUpdated by remember { mutableStateOf("") }
 
             Text(timesUpdated) // This is needed to update the ui on game changes..
@@ -117,12 +148,18 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 },
                 label = { Text("Enter game code here") },
                 singleLine = true,
+                colors = TextFieldDefaults.textFieldColors(
+                    focusedLabelColor = Color.Black,
+                    focusedIndicatorColor = Color.Blue,
+                    cursorColor = Color.Blue
+                ),
                 keyboardActions = KeyboardActions(
-                    onDone = { onCodeSubmit() })
+                    onDone = { onCodeSubmit() }
+                )
             )
 
             Text(
-                if (!game.hasOpponent) "No opponent connected." else if (game.onTurn) "It's your turn!" else "Waiting for opponent...",
+                if (!game.hasOpponent) "No opponent connected." else if (game.onTurn) "It's your turn!" else "Waiting for opponent to move...",
                 modifier = Modifier.padding(5.dp),
                 fontSize = 20.sp,
                 color = if (!game.hasOpponent) Color.Red else if (game.onTurn) Color.Green else Color.Blue,
@@ -184,7 +221,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.LightGray)
                 ) {
-                    Text(resetButtonContent)
+                    Text(resetButtonContent, color = Color.Red)
                 }
 
                 Button(
@@ -200,7 +237,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.LightGray)
                 ) {
-                    Text(toggleSymbolButtonContent)
+                    Text(toggleSymbolButtonContent, color = Color.Blue)
                 }
             }
 
@@ -267,14 +304,20 @@ private fun DrawScope.drawSymbol(symbol: TicTacToeSymbol, fieldX: Int, fieldY: I
     if (symbol == TicTacToeSymbol.X) {
         drawLine(
             color = colorX,
-            start = Offset(x = boxCenter.x - symbolSize / 2F, y = boxCenter.y - symbolSize / 2F),
+            start = Offset(
+                x = boxCenter.x - symbolSize / 2F,
+                y = boxCenter.y - symbolSize / 2F
+            ),
             end = Offset(x = boxCenter.x + symbolSize / 2F, y = boxCenter.y + symbolSize / 2F),
             strokeWidth = 3.dp.toPx(),
             cap = StrokeCap.Round
         )
         drawLine(
             color = colorX,
-            start = Offset(x = boxCenter.x - symbolSize / 2F, y = boxCenter.y + symbolSize / 2F),
+            start = Offset(
+                x = boxCenter.x - symbolSize / 2F,
+                y = boxCenter.y + symbolSize / 2F
+            ),
             end = Offset(x = boxCenter.x + symbolSize / 2F, y = boxCenter.y - symbolSize / 2F),
             strokeWidth = 3.dp.toPx(),
             cap = StrokeCap.Round

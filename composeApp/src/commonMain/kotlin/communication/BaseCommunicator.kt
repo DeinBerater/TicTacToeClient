@@ -47,6 +47,10 @@ abstract class BaseCommunicator {
      * */
     protected abstract fun sendBytes(bytes: ByteArray)
 
+    /** Disconnects the WebSocket, if initialized/connected
+     * */
+    abstract suspend fun closeWebSocket()
+
 
 }
 

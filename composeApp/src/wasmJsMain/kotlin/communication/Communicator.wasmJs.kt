@@ -99,6 +99,11 @@ class Communicator : BaseCommunicator() {
         webSocket.send(dataArray)
     }
 
+    override suspend fun closeWebSocket() {
+        if (!this@Communicator::webSocket.isInitialized) return
+        webSocket.close()
+    }
+
 }
 
 actual fun createCommunicator(): BaseCommunicator = Communicator()

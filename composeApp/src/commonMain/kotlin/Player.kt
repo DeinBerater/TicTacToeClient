@@ -12,13 +12,17 @@ class Player(
     val updateChannel = Channel<String?>()
     private val game = Game()
 
-    private val communicator = createCommunicator()
+    private var communicator = createCommunicator()
 
     private val gameCodeCharRange: CharRange = ('A'..'Z')
 
     private var lastGameCodeEntered: String? = null
 
     init {
+        connectWithWebSocket()
+    }
+
+    private fun connectWithWebSocket() {
         scope.launch {
             try {
                 println("Trying to connect to WebSocket...")
@@ -45,11 +49,19 @@ class Player(
         }
     }
 
+    fun restartConnection() {
+        scope.launch {
+            communicator.closeWebSocket()
+            communicator = createCommunicator()
+            connectWithWebSocket()
+        }
+    }
+
     private suspend fun listenToIncomingBytes() {
         println("Listening to incoming bytes...")
         for (incoming in communicator.bytesIncoming) {
             if (incoming == null) {
-                updateChannel.send("Due to an error, the connection has been closed.")
+                updateChannel.send("Error in WebSocket connection: The connection has been closed.")
                 return
             }
 
