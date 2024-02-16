@@ -1,4 +1,5 @@
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import game.TicTacToeSymbol
 import kotlinx.coroutines.launch
@@ -31,11 +33,31 @@ fun App(modifier: Modifier = Modifier.fillMaxSize(), darkTheme: Boolean = isSyst
     val player = Player(scope)
     val game = player.game()
 
-    Canvas(modifier = modifier) {
+    Canvas(modifier = modifier.pointerInput(true) {
+        detectTapGestures {
+            val boxWidth = size.width / 3
+            val boxHeight = size.height / 3
+
+            val x = it.x.toInt() / boxWidth
+            val y = it.y.toInt() / boxHeight
+
+            println("Clicked on field ($x, $y).")
+            try {
+                // Also updates ui.
+                player.makeMove(x, y)
+            } catch (e: Exception) {
+                println("Exception when making a move: ${e::class.simpleName}")
+                // In case of an invalid move
+            }
+        }
+    }) {
         drawField()
-        drawSymbol(TicTacToeSymbol.X, 0, 0)
-        drawSymbol(TicTacToeSymbol.X, 1, 0)
-        drawSymbol(TicTacToeSymbol.O, 1, 1)
+        for (y in 0..2) {
+            for (x in 0..2) {
+                val symbol = game.getSymbolByCoords(x, y)
+                symbol?.let { drawSymbol(it, x, y) }
+            }
+        }
     }
 
 
@@ -157,8 +179,4 @@ private fun DrawScope.drawSymbol(symbol: TicTacToeSymbol, fieldX: Int, fieldY: I
             width = 4.dp.toPx()
         )
     )
-}
-
-private fun onTapInField() {
-
 }
