@@ -7,29 +7,32 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 
 class Player(
-    private val game: Game,
     private val scope: CoroutineScope
 ) {
     val updateChannel = Channel<String?>()
+    private val game = Game()
+
     private val communicator = createCommunicator()
 
     init {
         scope.launch {
             try {
-                println("Trying to connect with WebSocket...")
+                println("Trying to connect to WebSocket...")
+                // This action is blocking.
                 communicator.connectWithWebsocket()
-                communicator.initializeEventListeners(scope)
             } catch (e: Exception) {
                 updateChannel.send("Error in WebSocket connection: ${e::class.simpleName}")
                 e.printStackTrace()
                 return@launch
             }
-            communicator.initializeEventListeners(scope)
         }
         scope.launch {
             listenToIncomingBytes()
         }
     }
+
+    /** Get the game */
+    fun game() = game
 
     private fun updateUi() {
         scope.launch {
@@ -50,17 +53,16 @@ class Player(
             val byteDeconstructor = ByteDeconstructor(incoming)
 
             try {
-
                 when (byteDeconstructor.readInt(3)) {
                     0 -> onWelcome(byteDeconstructor) // Welcome
-                    1 -> updateChannel.send("Sorry, there was a problem with receiving data :/") // PacketInvalid
+                    1 -> updateChannel.send("Sorry, there was a problem with sending data :/") // PacketInvalid
                     2 -> onOpponentMakeMove(
                         byteDeconstructor.readInt(4),
                         byteDeconstructor.readBoolean()
                     ) // OpponentMakeMove
                     3 -> game.hasOpponent = false // Opponentleave
                     4 -> updateGame(byteDeconstructor) // GameInfo
-                    5 -> updateChannel.send("You cannot do this right now.") // ActionInvalid
+                    5 -> onInvalidAction()
                     6 -> updateChannel.send("This game code is invalid.") // GameCodeInvalid
                     7 -> updateChannel.send("The game is full, please wait or join another game.") // GameFull
                 }
@@ -87,6 +89,13 @@ class Player(
         // ToDo: Handle just won
 
         updateUi()
+    }
+
+    private suspend fun onInvalidAction() {
+        updateChannel.send("You cannot do this right now.") // ActionInvalid
+
+        // Request the current status, as this shouldn't happen.
+        communicator.sendRequestCurrentStatus()
     }
 
     private fun updateGame(byteDeconstructor: ByteDeconstructor) {

@@ -1,7 +1,7 @@
 package communication
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.await
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.khronos.webgl.ArrayBuffer
@@ -37,47 +37,46 @@ class Communicator : BaseCommunicator() {
      * */
     override suspend fun connectWithWebsocket() {
 
-        println("Trying to connect to WebSocket...")
         webSocket = WebSocket("ws://192.168.178.121:80")
 
         webSocket.binaryType = BinaryType.ARRAYBUFFER
-    }
 
-    override suspend fun initializeEventListeners(scope: CoroutineScope) {
-
-        scope.launch {
-            // Timeout after 4 seconds.
-            delay(4000L)
-            if (webSocket.readyState.toInt() == 0) {
-                webSocket.close()
-            }
-        }
-
-        scope.launch {
-            while (webSocket.readyState.toInt() <= 1) {
-                val data = onMessagePromise().await<JsAny?>()
-
-                data as? ArrayBuffer ?: throw InvalidPacketException("Data is not binary.")
-
-                // Convert data to ByteArray
-                val dataArray = Int8Array(data)
-                val byteArray = ByteArray(dataArray.length)
-                for (i in 0 until dataArray.length) {
-                    byteArray[i] = dataArray[i]
+        coroutineScope {
+            launch {
+                // Timeout after 4 seconds.
+                delay(4000L)
+                if (webSocket.readyState.toInt() == 0) {
+                    webSocket.close()
                 }
+            }
 
-                // Send byte array
-                bytesIncoming.send(byteArray)
+            launch {
+                while (webSocket.readyState.toInt() <= 1) {
+                    val data = onMessagePromise().await<JsAny?>()
+
+                    data as? ArrayBuffer ?: throw InvalidPacketException("Data is not binary.")
+
+                    // Convert data to ByteArray
+                    val dataArray = Int8Array(data)
+                    val byteArray = ByteArray(dataArray.length)
+                    for (i in 0 until dataArray.length) {
+                        byteArray[i] = dataArray[i]
+                    }
+
+                    // Send byte array
+                    bytesIncoming.send(byteArray)
+                }
+            }
+
+
+            launch {
+                onClosePromise().await<Nothing?>()
+                println("WebSocket closed (cannot connect?), disconnected.")
+                // Websocket closed, sending null.
+                bytesIncoming.send(null)
             }
         }
 
-
-        scope.launch {
-            onClosePromise().await<Nothing?>()
-            println("WebSocket closed (cannot connect?), disconnected.")
-            // Websocket closed, sending null.
-            bytesIncoming.send(null)
-        }
     }
 
 

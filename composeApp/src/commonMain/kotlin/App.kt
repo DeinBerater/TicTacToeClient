@@ -10,7 +10,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import game.Game
 import kotlinx.coroutines.launch
 
 @Composable
@@ -18,8 +17,8 @@ fun App() {
 
     val scope = rememberCoroutineScope()
 
-    val game = Game()
-    val player = Player(game, scope)
+    val player = Player(scope)
+    val game = player.game()
 
     MaterialTheme {
 

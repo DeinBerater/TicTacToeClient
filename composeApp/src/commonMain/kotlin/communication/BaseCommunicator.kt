@@ -1,6 +1,5 @@
 package communication
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 
 abstract class BaseCommunicator {
@@ -15,8 +14,6 @@ abstract class BaseCommunicator {
      * Throws an exception if something didn't work with that.
      * */
     abstract suspend fun connectWithWebsocket()
-
-    open suspend fun initializeEventListeners(scope: CoroutineScope) {}
 
     fun sendSubmitGameCode(gameCode: String) {
 
