@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
@@ -28,6 +29,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -35,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import communication.WebSocketNotConnectedException
 import game.TicTacToeSymbol
 import kotlinx.coroutines.launch
 
@@ -46,12 +51,16 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
     val player = Player(scope)
     val game = player.game()
 
+    // Run if there is any exception which should be shown in a popup.
+    fun onException(message: String) {
+        println("An exception occurred:")
+        println(message)
+    }
 
     // ToDo: Implement dark theme
     MaterialTheme {
 
         Column(
-            Modifier.padding(5.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         )
@@ -65,9 +74,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 val exceptionMessage = player.updateChannel.receive()
 
                 if (exceptionMessage != null) {
-                    // ToDo: Good exception handling here
-                    println("An exception occurred:")
-                    println(exceptionMessage)
+                    onException(exceptionMessage)
                     return@launch
                 }
 
@@ -76,25 +83,43 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             }
 
 
+            var displayedGameCode by remember { mutableStateOf(game.gameCode ?: "-") }
+
             Text(
                 buildAnnotatedString {
                     append("Your Game Code: ")
 
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(game.gameCode ?: "-")
+                        append(displayedGameCode)
                     }
 
                 }, fontSize = 25.sp
             )
 
             var gameCodeEntered by remember { mutableStateOf("") }
+            fun onCodeSubmit() {
+                try {
+                    player.submitGameCode(gameCodeEntered)
+                    displayedGameCode = "..."
+                } catch (e: Exception) {
+                    onException(e.message ?: e::class.simpleName ?: "Unknown error.")
+                }
+            }
             TextField(
-                modifier = Modifier.padding(10.dp),
+                modifier = Modifier.padding(10.dp).onKeyEvent {
+                    if (it.key == Key.Enter || it.key == Key.NumPadEnter) {
+                        onCodeSubmit()
+                        true
+                    } else false
+                },
                 value = gameCodeEntered,
                 onValueChange = {
                     gameCodeEntered = it
                 },
-                label = { Text("Enter game code here") }
+                label = { Text("Enter game code here") },
+                singleLine = true,
+                keyboardActions = KeyboardActions(
+                    onDone = { onCodeSubmit() })
             )
 
             Text(
@@ -150,7 +175,11 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     modifier = Modifier.padding(4.dp).weight(0.5f).fillMaxHeight(0.8F),
                     onClick = {
                         println("Trying to reset board...")
-                        player.resetBoard()
+                        try {
+                            player.resetBoard()
+                        } catch (e: WebSocketNotConnectedException) {
+                            onException("There is no connection.")
+                        }
                         resetButtonContent = "Resetting..."
                     },
                     shape = RoundedCornerShape(50),
@@ -163,7 +192,11 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     modifier = Modifier.padding(4.dp).weight(0.5f).fillMaxHeight(0.8F),
                     onClick = {
                         println("Trying to toggle symbol...")
-                        player.toggleSymbol()
+                        try {
+                            player.toggleSymbol()
+                        } catch (e: WebSocketNotConnectedException) {
+                            onException("There is no connection.")
+                        }
                         toggleSymbolButtonContent = "Toggling symbol..."
                     },
                     shape = RoundedCornerShape(50),

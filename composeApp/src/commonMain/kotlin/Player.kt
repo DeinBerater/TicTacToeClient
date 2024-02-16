@@ -16,6 +16,8 @@ class Player(
 
     private val gameCodeCharRange: CharRange = ('A'..'Z')
 
+    private var lastGameCodeEntered: String? = null
+
     init {
         scope.launch {
             try {
@@ -65,7 +67,7 @@ class Player(
                     3 -> game.hasOpponent = false // OpponentLeave
                     4 -> updateGame(byteDeconstructor) // GameInfo
                     5 -> updateChannel.send("You cannot do this right now.") // ActionInvalid
-                    6 -> updateChannel.send("This game code is invalid.") // GameCodeInvalid
+                    6 -> onGameCodeInvalid() // GameCodeInvalid
                     7 -> updateChannel.send("The game is full, please wait or join another game.") // GameFull
                 }
             } catch (e: Exception) {
@@ -98,6 +100,7 @@ class Player(
         game.onTurn = byteDeconstructor.readBoolean()
         game.hasOpponent = byteDeconstructor.readBoolean()
         if (byteDeconstructor.readBoolean()) game.setGameActive(symbol) else game.symbol = symbol
+        game.gameCode = lastGameCodeEntered
 
         val boardFields = mutableListOf<TicTacToeSymbol?>()
         // Build board
@@ -112,6 +115,11 @@ class Player(
         game.updateBoard(boardFields)
 
         updateUi()
+    }
+
+    private suspend fun onGameCodeInvalid() {
+        updateChannel.send("This game code is invalid.") // GameCodeInvalid
+        lastGameCodeEntered = game.gameCode // Set the last code back for it not to update.
     }
 
     private fun getSymbolByBoolean(boolean: Boolean): TicTacToeSymbol {
@@ -130,10 +138,15 @@ class Player(
     }
 
     fun submitGameCode(gameCode: String) {
-        if (!gameCode.all { gameCodeCharRange.contains(it) }) throw IllegalArgumentException("The game code should just contain uppercase letters (A - Z).")
-        if (gameCode.length != 5) throw IllegalArgumentException("The game code should have a length of 5.")
+        val gameCodeUpperCase = gameCode.uppercase()
+        if (!gameCodeUpperCase.all { gameCodeCharRange.contains(it) }) throw IllegalArgumentException(
+            "The game code should just contain letters (A - Z)."
+        )
+        if (gameCodeUpperCase.length != 5) throw IllegalArgumentException("The game code should have a length of 5.")
 
-        communicator.sendSubmitGameCode(gameCode)
+        lastGameCodeEntered = gameCodeUpperCase
+
+        communicator.sendSubmitGameCode(gameCodeUpperCase)
     }
 
     fun resetBoard() = communicator.sendResetBoard()
