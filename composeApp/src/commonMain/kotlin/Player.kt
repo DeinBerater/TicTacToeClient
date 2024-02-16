@@ -14,6 +14,8 @@ class Player(
 
     private val communicator = createCommunicator()
 
+    private val gameCodeCharRange: CharRange = ('A'..'Z')
+
     init {
         scope.launch {
             try {
@@ -60,9 +62,9 @@ class Player(
                         byteDeconstructor.readInt(4),
                         byteDeconstructor.readBoolean()
                     ) // OpponentMakeMove
-                    3 -> game.hasOpponent = false // Opponentleave
+                    3 -> game.hasOpponent = false // OpponentLeave
                     4 -> updateGame(byteDeconstructor) // GameInfo
-                    5 -> onInvalidAction()
+                    5 -> updateChannel.send("You cannot do this right now.") // ActionInvalid
                     6 -> updateChannel.send("This game code is invalid.") // GameCodeInvalid
                     7 -> updateChannel.send("The game is full, please wait or join another game.") // GameFull
                 }
@@ -76,7 +78,7 @@ class Player(
     private fun onWelcome(byteDeconstructor: ByteDeconstructor) {
         var gameCode = ""
         repeat(5) {
-            val char = 'A' + byteDeconstructor.readInt(5)
+            val char = gameCodeCharRange.first + byteDeconstructor.readInt(5)
             gameCode += char
         }
         game.gameCode = gameCode
@@ -89,13 +91,6 @@ class Player(
         // ToDo: Handle just won
 
         updateUi()
-    }
-
-    private suspend fun onInvalidAction() {
-        updateChannel.send("You cannot do this right now.") // ActionInvalid
-
-        // Request the current status, as this shouldn't happen.
-        communicator.sendRequestCurrentStatus()
     }
 
     private fun updateGame(byteDeconstructor: ByteDeconstructor) {
@@ -124,9 +119,23 @@ class Player(
     }
 
 
-    fun makeMove() {
-
+    /** Makes a move on the board
+     * **Might throw an exception, which has to be caught!**
+     * */
+    fun makeMove(x: Int, y: Int) {
+        val pos = 3 * y + x
+        game.makeMove(pos, false)
+        updateUi()
+        communicator.sendMakeMove(pos)
     }
 
-    fun submitGameCode(gameCode: String) = communicator.sendSubmitGameCode(gameCode)
+    fun submitGameCode(gameCode: String) {
+        if (!gameCode.all { gameCodeCharRange.contains(it) }) throw IllegalArgumentException("The game code should just contain uppercase letters (A - Z).")
+        if (gameCode.length != 5) throw IllegalArgumentException("The game code should have a length of 5.")
+
+        communicator.sendSubmitGameCode(gameCode)
+    }
+
+    fun resetBoard() = communicator.sendResetBoard()
+    fun toggleSymbol() = communicator.sendToggleSymbol()
 }

@@ -1,5 +1,6 @@
 package communication
 
+import OutgoingPacketType
 import kotlinx.coroutines.channels.Channel
 
 abstract class BaseCommunicator {
@@ -16,23 +17,28 @@ abstract class BaseCommunicator {
     abstract suspend fun connectWithWebsocket()
 
     fun sendSubmitGameCode(gameCode: String) {
-
+        val byteBuilder = ByteBuilder().addInt(OutgoingPacketType.CodeSubmit.ordinal, 3)
+        gameCode.forEach {
+            byteBuilder.addInt(it - 'A', 5)
+        }
+        sendBytes(byteBuilder.getBytes())
     }
 
-    fun sendRequestCurrentStatus() {
+    fun sendRequestCurrentStatus() = sendEmptyPacket(OutgoingPacketType.RequestCurrentStatus)
 
+    fun sendMakeMove(position: Int) {
+        sendBytes(
+            ByteBuilder().addInt(OutgoingPacketType.PlayerMakeMove.ordinal, 3).addInt(position, 4)
+                .getBytes()
+        )
     }
 
-    fun sendMakeMove() {
+    fun sendResetBoard() = sendEmptyPacket(OutgoingPacketType.BoardReset)
 
-    }
+    fun sendToggleSymbol() = sendEmptyPacket(OutgoingPacketType.ToggleSymbol)
 
-    fun sendResetBoard() {
-
-    }
-
-    fun sendToggleSymbol() {
-
+    private fun sendEmptyPacket(type: OutgoingPacketType) {
+        sendBytes(ByteBuilder().addInt(type.ordinal, 3).getBytes())
     }
 
     /** Sends bytes to the websocket in a new coroutine.

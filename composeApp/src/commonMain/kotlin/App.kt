@@ -37,10 +37,11 @@ fun App() {
             scope.launch {
                 // Wait for the channel to demand an UI update
                 val exceptionMessage = player.updateChannel.receive()
+
                 if (exceptionMessage != null) {
+                    // ToDo: Good exception handling here
                     println("An exception occurred:")
                     println(exceptionMessage)
-                    // Exception handling
                     return@launch
                 }
 
