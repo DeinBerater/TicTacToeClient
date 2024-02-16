@@ -12,6 +12,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
+//            val height = window.decorView.height
+//            val width = window.decorView.width
+//            val smaller = min(height, width)
+//            val modifier = Modifier.size(smaller.dp, smaller.dp)
+//            println("$height sdafasd $width")
             App()
         }
     }

@@ -30,6 +30,8 @@ class Game {
 
     private val fields = MutableList<TicTacToeSymbol?>(9) { _ -> null }
 
+    // ToDo: Win Logic and scoreboard
+
     fun setGameActive(symbol: TicTacToeSymbol) {
         gameActive = true
         this.symbol = symbol
