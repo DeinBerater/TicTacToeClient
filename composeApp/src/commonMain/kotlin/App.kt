@@ -1,11 +1,20 @@
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFromBaseline
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,61 +29,34 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import game.TicTacToeSymbol
 import kotlinx.coroutines.launch
 
 @Composable
-fun App(modifier: Modifier = Modifier.fillMaxSize(), darkTheme: Boolean = isSystemInDarkTheme()) {
-    // The platform can decide for itself which modifier the canvas should have
+fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
 
     val scope = rememberCoroutineScope()
 
     val player = Player(scope)
     val game = player.game()
 
-    Canvas(modifier = modifier.pointerInput(true) {
-        detectTapGestures {
-            val boxWidth = size.width / 3
-            val boxHeight = size.height / 3
-
-            val x = it.x.toInt() / boxWidth
-            val y = it.y.toInt() / boxHeight
-
-            println("Clicked on field ($x, $y).")
-            try {
-                // Also updates ui.
-                player.makeMove(x, y)
-            } catch (e: Exception) {
-                println("Exception when making a move: ${e::class.simpleName}")
-                // In case of an invalid move
-            }
-        }
-    }) {
-        drawField()
-        for (y in 0..2) {
-            for (x in 0..2) {
-                val symbol = game.getSymbolByCoords(x, y)
-                symbol?.let { drawSymbol(it, x, y) }
-            }
-        }
-    }
-
 
     // ToDo: Implement dark theme
     MaterialTheme {
 
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally)
+        Column(
+            Modifier.padding(5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        )
         {
             var timesUpdated by remember { mutableStateOf("") }
-
-            Text("On turn: ${game.onTurn}")
-            Text("Symbol: ${game.symbol}")
-            Text("Opponent connected: ${game.hasOpponent}")
-            Text("Game Code: ${game.gameCode}")
-            Text("First: " + game.getSymbolByCoords(0, 0))
-
-
 
             Text(timesUpdated) // This is needed to update the ui on game changes..
 
@@ -91,6 +73,104 @@ fun App(modifier: Modifier = Modifier.fillMaxSize(), darkTheme: Boolean = isSyst
 
                 // Change anything to update the UI.. Little trick (we do not talk about that.)
                 timesUpdated = if (timesUpdated == "") " " else ""
+            }
+
+
+            Text(
+                buildAnnotatedString {
+                    append("Your Game Code: ")
+
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(game.gameCode ?: "-")
+                    }
+
+                }, fontSize = 25.sp
+            )
+
+            var gameCodeEntered by remember { mutableStateOf("") }
+            TextField(
+                modifier = Modifier.padding(10.dp),
+                value = gameCodeEntered,
+                onValueChange = {
+                    gameCodeEntered = it
+                },
+                label = { Text("Enter game code here") }
+            )
+
+            Text(
+                if (!game.hasOpponent) "No opponent connected." else if (game.onTurn) "It's your turn" else "Waiting for opponent...",
+                modifier = Modifier.padding(5.dp),
+                fontSize = 20.sp
+            )
+            Text(
+                "You are: ${game.symbol}",
+                modifier = Modifier.paddingFromBaseline(top = 5.dp),
+                fontSize = 20.sp
+            )
+
+
+            Canvas(
+                modifier = Modifier.fillMaxHeight(0.8F).aspectRatio(1F)
+                    .padding(20.dp)
+                    .pointerInput(true) {
+                        detectTapGestures {
+                            val boxWidth = size.width / 3
+                            val boxHeight = size.height / 3
+
+                            val x = it.x.toInt() / boxWidth
+                            val y = it.y.toInt() / boxHeight
+
+                            println("Clicked on field ($x, $y).")
+                            try {
+                                // Also updates ui.
+                                player.makeMove(x, y)
+                            } catch (e: Exception) {
+                                println("Exception when making a move: ${e::class.simpleName}")
+                                // In case of an invalid move
+                            }
+                        }
+                    }) {
+                drawField()
+                for (y in 0..2) {
+                    for (x in 0..2) {
+                        val symbol = game.getSymbolByCoords(x, y)
+                        symbol?.let { drawSymbol(it, x, y) }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.padding(5.dp).fillMaxSize(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                var resetButtonContent by remember { mutableStateOf("Reset game") }
+                var toggleSymbolButtonContent by remember { mutableStateOf("Toggle Symbol") }
+
+                Button(
+                    modifier = Modifier.padding(4.dp).weight(0.5f).fillMaxHeight(0.8F),
+                    onClick = {
+                        println("Trying to reset board...")
+                        player.resetBoard()
+                        resetButtonContent = "Resetting..."
+                    },
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.LightGray)
+                ) {
+                    Text(resetButtonContent)
+                }
+
+                Button(
+                    modifier = Modifier.padding(4.dp).weight(0.5f).fillMaxHeight(0.8F),
+                    onClick = {
+                        println("Trying to toggle symbol...")
+                        player.toggleSymbol()
+                        toggleSymbolButtonContent = "Toggling symbol..."
+                    },
+                    shape = RoundedCornerShape(50),
+                    colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.LightGray)
+                ) {
+                    Text(toggleSymbolButtonContent)
+                }
             }
 
         }
