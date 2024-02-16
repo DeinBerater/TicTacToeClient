@@ -39,6 +39,7 @@ class Player(
     fun game() = game
 
     private fun updateUi() {
+        println("Updating ui...")
         scope.launch {
             updateChannel.send(null)
         }
@@ -86,6 +87,8 @@ class Player(
             gameCode += char
         }
         game.gameCode = gameCode
+        lastGameCodeEntered = gameCode
+
         updateUi()
     }
 

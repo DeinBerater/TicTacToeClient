@@ -83,7 +83,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             }
 
 
-            var displayedGameCode = game.gameCode ?: "-"
+            val displayedGameCode = game.gameCode ?: "-"
 
             Text(
                 buildAnnotatedString {
@@ -122,12 +122,13 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             )
 
             Text(
-                if (!game.hasOpponent) "No opponent connected." else if (game.onTurn) "It's your turn" else "Waiting for opponent...",
+                if (!game.hasOpponent) "No opponent connected." else if (game.onTurn) "It's your turn!" else "Waiting for opponent...",
                 modifier = Modifier.padding(5.dp),
-                fontSize = 20.sp
+                fontSize = 20.sp,
+                color = if (!game.hasOpponent) Color.Red else if (game.onTurn) Color.Green else Color.Blue,
             )
             Text(
-                "You are: ${game.symbol}",
+                "You are: ${game.symbol ?: "-"}",
                 modifier = Modifier.paddingFromBaseline(top = 5.dp),
                 fontSize = 20.sp
             )
@@ -167,8 +168,8 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 modifier = Modifier.padding(5.dp).fillMaxSize(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                var resetButtonContent by remember { mutableStateOf("Reset game") }
-                var toggleSymbolButtonContent = "Toggle Symbol"
+                val resetButtonContent by remember { mutableStateOf("Reset Game") }
+                val toggleSymbolButtonContent by remember { mutableStateOf("Toggle Symbol") }
 
                 Button(
                     modifier = Modifier.padding(4.dp).weight(0.5f).fillMaxHeight(0.8F),
@@ -179,7 +180,6 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                         } catch (e: WebSocketNotConnectedException) {
                             onException("There is no connection.")
                         }
-                        resetButtonContent = "Resetting..."
                     },
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.LightGray)
@@ -196,7 +196,6 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                         } catch (e: WebSocketNotConnectedException) {
                             onException("There is no connection.")
                         }
-                        toggleSymbolButtonContent = "Toggling symbol..."
                     },
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.outlinedButtonColors(backgroundColor = Color.LightGray)

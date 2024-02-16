@@ -6,7 +6,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Int8Array
+import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
+import org.khronos.webgl.set
 import org.w3c.dom.ARRAYBUFFER
 import org.w3c.dom.BinaryType
 import org.w3c.dom.WebSocket
@@ -88,7 +90,13 @@ class Communicator : BaseCommunicator() {
         // ReadyStates: 0 (Connecting), 1 (Open), 2 (Closing), 3 (Closed)
         if (!this@Communicator::webSocket.isInitialized || webSocket.readyState.toInt() != 1) throw WebSocketNotConnectedException()
 
-        TODO("Not yet implemented")
+        // Convert ByteArray to data
+        val dataArray = Uint8Array(bytes.size)
+        for (i in bytes.indices) {
+            dataArray[i] = bytes[i]
+        }
+
+        webSocket.send(dataArray)
     }
 
 }
