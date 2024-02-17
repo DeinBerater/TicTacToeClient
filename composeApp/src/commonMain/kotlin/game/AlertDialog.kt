@@ -20,9 +20,7 @@ fun alertDialog(
             Text(text = dialogText)
         },
         onDismissRequest = {
-            if (onButton2Press != null) {
-                onButton2Press()
-            }
+            onMainButtonPress()
         },
         confirmButton = {
             TextButton(

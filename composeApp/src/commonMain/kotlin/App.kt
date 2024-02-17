@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -34,6 +37,9 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -43,7 +49,11 @@ import androidx.compose.ui.unit.sp
 import communication.WebSocketNotConnectedException
 import game.TicTacToeSymbol
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import org.jetbrains.compose.resources.painterResource
 
+
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
 
@@ -91,41 +101,65 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
             openAlertDialog.value = true
         }
 
+        val codeCopied = remember { mutableStateOf(false) }
+
+        var timesUpdated by remember { mutableStateOf("") }
+
+        Text(timesUpdated) // This is needed to update the ui on game changes..
+
+        scope.launch {
+            // Wait for the channel to demand an UI update
+            val exceptionMessage = player.updateChannel.receive()
+
+            if (exceptionMessage != null) {
+                onException(exceptionMessage)
+                return@launch
+            }
+
+            // Change anything to update the UI.. Little trick (we do not talk about that.)
+            timesUpdated = if (timesUpdated == "") " " else ""
+            codeCopied.value = false // Reset copy button color
+        }
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            var timesUpdated by remember { mutableStateOf("") }
-
-            Text(timesUpdated) // This is needed to update the ui on game changes..
-
-            scope.launch {
-                // Wait for the channel to demand an UI update
-                val exceptionMessage = player.updateChannel.receive()
-
-                if (exceptionMessage != null) {
-                    onException(exceptionMessage)
-                    return@launch
-                }
-
-                // Change anything to update the UI.. Little trick (we do not talk about that.)
-                timesUpdated = if (timesUpdated == "") " " else ""
-            }
 
 
             val displayedGameCode = game.gameCode ?: "-"
+            val clipboardManager: ClipboardManager = LocalClipboardManager.current
 
-            Text(
-                buildAnnotatedString {
-                    append("Your Game Code: ")
+            Row(
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    buildAnnotatedString {
+                        append("Your Game Code: ")
 
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append(displayedGameCode)
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(displayedGameCode)
+                        }
+
+                    }, fontSize = 25.sp
+                )
+                // Only create the copy button if there is a code to copy
+                game.gameCode?.let {
+                    IconButton(
+                        modifier = Modifier.offset(0.dp, (-5).dp),
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(text = game.gameCode ?: ""))
+                            codeCopied.value = true
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource("content_copy.xml"),
+                            contentDescription = "CopyIcon",
+                            tint = if (codeCopied.value) Color(0xFF2ecc71) else Color.Black,
+                        )
                     }
-
-                }, fontSize = 25.sp
-            )
+                }
+            }
 
             var gameCodeEntered by remember { mutableStateOf("") }
             fun onCodeSubmit() {
