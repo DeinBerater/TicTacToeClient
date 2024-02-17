@@ -1,10 +1,12 @@
 import androidx.compose.material.AlertDialog
+import androidx.compose.material.Colors
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 
 @Composable
 fun alertDialog(
+    colors: Colors,
     dialogTitle: String,
     dialogText: String,
     mainButtonName: String,
