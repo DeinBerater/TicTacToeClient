@@ -122,7 +122,6 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
 
                 var timesUpdated by remember { mutableStateOf("") }
 
-                var winnerBefore by remember { mutableStateOf(false) } // ToDo
                 var winner by remember { mutableStateOf(null as List<FieldCoordinate>?) }
 
                 Text(timesUpdated) // This is needed to update the ui on game changes..
@@ -279,6 +278,44 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                             val symbol = game.getSymbolByCoords(x, y)
                             symbol?.let { drawSymbol(it, x, y) }
                         }
+                    }
+
+                    if (winner != null) {
+                        // Animation
+                        val firstPoint = winner!!.first()
+                        val lastPoint = winner!!.last()
+
+                        val differenceX = lastPoint.x - firstPoint.x
+                        val differenceY = lastPoint.y - firstPoint.y
+
+                        val pointA = Offset(
+                            x = center.x - (1 - firstPoint.x) * ((1 / 3F) * size.width),
+                            y = center.y - (1 - firstPoint.y) * ((1 / 3F) * size.height)
+                        ).minus(
+                            Offset(
+                                x = 1 / 12F * size.width * differenceX,
+                                y = 1 / 12F * size.height * differenceY
+                            )
+                        )
+
+                        val pointB = Offset(
+                            x = center.x - (1 - lastPoint.x) * ((1 / 3F) * size.width),
+                            y = center.y - (1 - lastPoint.y) * ((1 / 3F) * size.height)
+                        ).plus(
+                            Offset(
+                                x = 1 / 12F * size.width * differenceX,
+                                y = 1 / 12F * size.height * differenceY
+                            )
+                        )
+
+                        // size: Canvas size
+                        drawLine(
+                            color = Color.Green,
+                            start = pointA,
+                            end = pointB,
+                            strokeWidth = 4.dp.toPx(),
+                            cap = StrokeCap.Round
+                        )
                     }
                 }
 
