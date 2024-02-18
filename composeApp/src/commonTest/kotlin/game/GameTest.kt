@@ -102,7 +102,7 @@ class GameTest {
         val opponent = false
 
         assertFailsWith(GameNotActiveException::class) {
-            sut.makeMove(position, opponent)
+            sut.makeMove(FieldCoordinate(position), opponent)
         }
     }
 
@@ -124,7 +124,7 @@ class GameTest {
         val position = 0
         val opponent = false
 
-        sut.makeMove(position, opponent)
+        sut.makeMove(FieldCoordinate(position), opponent)
 
         val have = sut.getSymbolByCoords(0, 0)
 
@@ -141,7 +141,7 @@ class GameTest {
         val position = 0
         val opponent = false
 
-        sut.makeMove(position, opponent)
+        sut.makeMove(FieldCoordinate(position), opponent)
 
         assertFalse(sut.onTurn)
     }
@@ -155,7 +155,7 @@ class GameTest {
         val position = 0
         val opponent = true
 
-        sut.makeMove(position, opponent)
+        sut.makeMove(FieldCoordinate(position), opponent)
         val have = sut.getSymbolByCoords(0, 0)
         val want = TicTacToeSymbol.X
 
@@ -173,7 +173,7 @@ class GameTest {
         val opponent = false
 
         assertFailsWith(NotOnTurnException::class) {
-            sut.makeMove(position, opponent)
+            sut.makeMove(FieldCoordinate(position), opponent)
         }
     }
 

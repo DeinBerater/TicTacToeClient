@@ -54,6 +54,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import communication.WebSocketNotConnectedException
+import game.FieldCoordinate
 import game.TicTacToeSymbol
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -121,6 +122,9 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
 
                 var timesUpdated by remember { mutableStateOf("") }
 
+                var winnerBefore by remember { mutableStateOf(false) } // ToDo
+                var winner by remember { mutableStateOf(null as List<FieldCoordinate>?) }
+
                 Text(timesUpdated) // This is needed to update the ui on game changes..
 
                 scope.launch {
@@ -135,6 +139,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     // Change anything to update the UI.. Little trick (we do not talk about that.)
                     timesUpdated = if (timesUpdated == "") " " else ""
                     codeCopied.value = false // Reset copy button color
+                    winner = game.winner()
                 }
 
                 val displayedGameCode = game.gameCode ?: "-"
@@ -212,8 +217,14 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     )
                 )
 
+                val mainText =
+                    if (!game.hasOpponent) "No opponent connected."
+                    else if (winner != null) (if (game.onTurn) "You" else "The opponent") + " won!"
+                    else if (game.onTurn) "It's your turn!"
+                    else "Waiting for opponent to move..."
+
                 Text(
-                    if (!game.hasOpponent) "No opponent connected." else if (game.onTurn) "It's your turn!" else "Waiting for opponent to move...",
+                    mainText,
                     modifier = Modifier.padding(5.dp),
                     fontSize = 20.sp,
                     color = if (!game.hasOpponent) MaterialTheme.colors.secondaryVariant else if (game.onTurn) Color.Green else MaterialTheme.colors.primaryVariant,
@@ -242,7 +253,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
 
 
                 Canvas(
-                    modifier = Modifier.fillMaxHeight(0.8F).aspectRatio(1F)
+                    modifier = Modifier.fillMaxHeight(0.85F).aspectRatio(1F)
                         .padding(20.dp)
                         .pointerInput(true) {
                             detectTapGestures {
@@ -278,9 +289,9 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     val resetButtonContent by remember { mutableStateOf("Reset Game") }
                     val toggleSymbolButtonContent by remember { mutableStateOf("Toggle Symbol") }
                     Button(
-                        modifier = Modifier.padding(4.dp).widthIn(300.dp, 800.dp)
+                        modifier = Modifier.padding(4.dp).widthIn(300.dp, 300.dp)
                             .weight(0.5f, false)
-                            .heightIn(80.dp, 200.dp),
+                            .heightIn(60.dp, 60.dp),
                         onClick = {
                             println("Trying to reset board...")
                             try {
@@ -296,9 +307,9 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     }
 
                     Button(
-                        modifier = Modifier.padding(4.dp).widthIn(300.dp, 800.dp)
+                        modifier = Modifier.padding(4.dp).widthIn(300.dp, 300.dp)
                             .weight(0.5f, false)
-                            .heightIn(80.dp, 200.dp),
+                            .heightIn(60.dp, 60.dp),
                         onClick = {
                             println("Trying to toggle symbol...")
                             try {

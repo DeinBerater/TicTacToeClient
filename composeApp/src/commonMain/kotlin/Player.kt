@@ -1,5 +1,6 @@
 import communication.ByteDeconstructor
 import communication.createCommunicator
+import game.FieldCoordinate
 import game.Game
 import game.TicTacToeSymbol
 import kotlinx.coroutines.CoroutineScope
@@ -10,12 +11,10 @@ class Player(
     private val scope: CoroutineScope
 ) {
     val updateChannel = Channel<String?>()
-    private val game = Game()
-
+    private var game = Game()
     private var communicator = createCommunicator()
 
     private val gameCodeCharRange: CharRange = ('A'..'Z')
-
     private var lastGameCodeEntered: String? = null
 
     init {
@@ -49,11 +48,16 @@ class Player(
         }
     }
 
+    suspend fun closeConnection() {
+        communicator.closeWebSocket()
+    }
+
     fun restartConnection() {
         scope.launch {
-            communicator.closeWebSocket()
+            closeConnection()
             communicator = createCommunicator()
             connectWithWebSocket()
+            game = game()
         }
     }
 
@@ -74,8 +78,7 @@ class Player(
                     0 -> onWelcome(byteDeconstructor) // Welcome
                     1 -> updateChannel.send("Sorry, there was a problem with sending data :/") // PacketInvalid
                     2 -> onOpponentMakeMove(
-                        byteDeconstructor.readInt(4),
-                        byteDeconstructor.readBoolean()
+                        byteDeconstructor.readInt(4)
                     ) // OpponentMakeMove
                     3 -> {
                         game.hasOpponent = false; updateUi()
@@ -104,8 +107,8 @@ class Player(
         updateUi()
     }
 
-    private fun onOpponentMakeMove(position: Int, justWon: Boolean) {
-        game.makeMove(position, true)
+    private fun onOpponentMakeMove(position: Int) {
+        game.makeMove(FieldCoordinate(position), true)
 
         // ToDo: Handle just won
 
@@ -149,10 +152,10 @@ class Player(
      * **Might throw an exception, which has to be caught!**
      * */
     fun makeMove(x: Int, y: Int) {
-        val pos = 3 * y + x
+        val pos = FieldCoordinate(x, y)
         game.makeMove(pos, false)
         updateUi()
-        communicator.sendMakeMove(pos)
+        communicator.sendMakeMove(pos.toIndex())
     }
 
     fun submitGameCode(gameCode: String) {

@@ -53,14 +53,18 @@ class Game {
         NotOnTurnException::class,
         FieldAlreadyOccupiedException::class
     )
-    fun makeMove(position: Int, opponent: Boolean) {
+    fun makeMove(coordinate: FieldCoordinate, opponent: Boolean) {
         if (!gameActive) throw GameNotActiveException()
         if (!opponent && !onTurn) throw NotOnTurnException()
+
+        val position = coordinate.toIndex()
         if (fields[position] != null) throw FieldAlreadyOccupiedException()
         fields[position] = if (!opponent) symbol else symbol?.other()
 
         // Turns change. If the opponent just made a move, then this player is on turn.
-        onTurn = opponent
+        if (winner() == null) {
+            onTurn = opponent
+        } else gameActive = false
     }
 
     /** Updates the board with full data
@@ -75,8 +79,53 @@ class Game {
     /** Gets the symbol by coordinates (starting at top-left corner with 0, 0)
      * */
     fun getSymbolByCoords(x: Int, y: Int): TicTacToeSymbol? {
-        if (x !in 0..2 || y !in 0..2) throw IllegalArgumentException()
-        val index = 3 * y + x
-        return fields[index]
+        return fields[FieldCoordinate(x, y).toIndex()]
+    }
+
+
+    /** Checks if a player has won the game.
+     * @return If somebody has won, the row of the fields in which the win happened
+     * */
+    fun winner(): List<FieldCoordinate>? {
+
+        // Check horizontally
+        var fieldsToCheck = intArrayOf(0, 1, 2)
+        for (i in 0..2) {
+            val currentFieldsChecking = fieldsToCheck.map { it + i * 3 }.toIntArray() // Move by 3
+            // If the symbols are equal, there have to be symbols on each field, hence !!
+            if (fieldSymbolsEqual(*currentFieldsChecking)) return currentFieldsChecking.map {
+                FieldCoordinate(
+                    it
+                )
+            }
+        }
+
+        // Check vertically
+        fieldsToCheck = intArrayOf(0, 3, 6)
+        for (i in 0..2) {
+            val currentFieldsChecking = fieldsToCheck.map { it + i }.toIntArray() // Move by 1
+            // If the symbols are equal, there have to be symbols on each field, hence !!
+            if (fieldSymbolsEqual(*currentFieldsChecking)) return currentFieldsChecking.map {
+                FieldCoordinate(
+                    it
+                )
+            }
+        }
+
+        // Check diagonally
+        if (fieldSymbolsEqual(0, 4, 8)) return listOf(0, 4, 8).map { FieldCoordinate(it) }
+        else if (fieldSymbolsEqual(2, 4, 6)) return listOf(2, 4, 6).map { FieldCoordinate(it) }
+
+        // No win
+        return null
+    }
+
+    /** Checks if multiple fields have the same symbol.
+     * @param fieldIndexes the index of the fields (0-8) to check.
+     * @return true if multiple fields have the same symbol (_not null!!_), false otherwise.
+     * */
+    private fun fieldSymbolsEqual(vararg fieldIndexes: Int): Boolean {
+        val symbolToCheck = fields[fieldIndexes.first()] ?: return false
+        return fieldIndexes.drop(1).all { fields[it] == symbolToCheck }
     }
 }
