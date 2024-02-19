@@ -83,23 +83,22 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 openAlertDialog.value -> {
                     if (lastExceptionMessage.value!!.startsWith("Error in WebSocket connection")) {
                         alertDialog(
-                            MaterialTheme.colors,
                             "Websocket connection failed",
                             lastExceptionMessage.value!!,
-                            "Ok", {
+                            "Ok",
+                            {
                                 openAlertDialog.value = false
-                            },
-                            "Retry", {
-                                openAlertDialog.value = false
-                                player.restartConnection()
-                            }
-                        )
+                            }, "Retry"
+                        ) {
+                            openAlertDialog.value = false
+                            player.restartConnection()
+                        }
                     } else {
                         alertDialog(
-                            MaterialTheme.colors,
                             "Something went wrong",
                             lastExceptionMessage.value!!,
-                            "Ok", {
+                            "Ok",
+                            {
                                 openAlertDialog.value = false
                             }
                         )

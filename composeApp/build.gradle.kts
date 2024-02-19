@@ -55,12 +55,11 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.ui.tooling.preview)
             implementation(libs.androidx.activity.compose)
-            // implementation(libs.ktor.client.android)
             implementation(libs.kotlinx.coroutines.android)
 
-            implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-            implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
-            implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+            implementation(libs.androidx.lifecycle.viewmodel.ktx)
+            implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
