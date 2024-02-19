@@ -143,3 +143,15 @@ compose.desktop {
 compose.experimental {
     web.application {}
 }
+
+tasks.named("jsNodeDevelopmentRun") {
+    mustRunAfter("jsProductionExecutableCompileSync")
+}
+
+tasks.named("jsNodeProductionRun") {
+    mustRunAfter("jsDevelopmentExecutableCompileSync")
+}
+
+tasks.named("jsNodeRun") {
+    mustRunAfter("jsProductionExecutableCompileSync")
+}

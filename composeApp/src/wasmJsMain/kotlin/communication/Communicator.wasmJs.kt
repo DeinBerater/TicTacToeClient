@@ -39,7 +39,7 @@ class Communicator : BaseCommunicator() {
      * */
     override suspend fun connectWithWebsocket() {
 
-        webSocket = WebSocket("ws://192.168.178.121:80")
+        webSocket = WebSocket(getWebSocketUrl())
 
         webSocket.binaryType = BinaryType.ARRAYBUFFER
 

@@ -22,7 +22,7 @@ class Communicator : BaseCommunicator() {
         val client = HttpClient(getCommunicatorEngine()) {
             install(WebSockets)
         }
-        client.webSocket("ws://192.168.178.121:80") {
+        client.webSocket(getWebSocketUrl()) {
             println("Connection established.")
             websocketSession = this
 

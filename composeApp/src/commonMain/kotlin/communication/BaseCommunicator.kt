@@ -16,6 +16,10 @@ abstract class BaseCommunicator {
      * */
     abstract suspend fun connectWithWebsocket()
 
+    protected fun getWebSocketUrl(): String {
+        return "ws://192.168.178.121:80"
+    }
+
     fun sendSubmitGameCode(gameCode: String) {
         val byteBuilder = ByteBuilder().addInt(OutgoingPacketType.CodeSubmit.ordinal, 3)
         gameCode.forEach {
@@ -53,5 +57,6 @@ abstract class BaseCommunicator {
 
 
 }
+
 
 expect fun createCommunicator(): BaseCommunicator
