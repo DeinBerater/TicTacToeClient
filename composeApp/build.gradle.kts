@@ -29,18 +29,29 @@ kotlin {
         }
     }
 
+    js {
+        nodejs{}
+        binaries.executable()
+    }
+
     jvm("desktop")
 
     sourceSets {
         val desktopMain by getting
         val wasmJsMain by getting
+        val jsMain by getting
 
-        val androidDesktopMain by creating {
+        val sharingKtorMain by creating {
             dependsOn(commonMain.get())
+        }
+        val androidDesktopMain by creating {
+            dependsOn(sharingKtorMain)
         }
 
         androidMain.get().dependsOn(androidDesktopMain)
         desktopMain.dependsOn(androidDesktopMain)
+
+        jsMain.dependsOn(sharingKtorMain)
 
 
         commonMain.dependencies {
@@ -64,14 +75,18 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
         }
-        androidDesktopMain.dependencies {
+        jsMain.dependencies {
+            implementation(libs.ktor.client.js)
+            implementation(npm("discord.js", "14"))
+        }
+
+        sharingKtorMain.dependencies {
             implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.cio)
             implementation(libs.ktor.client.websockets)
         }
-//        wasmJsMain.dependencies {
-//            implementation(libs.ktor.client.js)
-//        }
+        androidDesktopMain.dependencies {
+            implementation(libs.ktor.client.cio)
+        }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
