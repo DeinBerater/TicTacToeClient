@@ -30,7 +30,8 @@ kotlin {
     }
 
     js {
-        nodejs{}
+        nodejs {}
+        useCommonJs()
         binaries.executable()
     }
 
@@ -154,4 +155,8 @@ tasks.named("jsNodeProductionRun") {
 
 tasks.named("jsNodeRun") {
     mustRunAfter("jsProductionExecutableCompileSync")
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile> {
+    kotlinOptions.useEsClasses = true
 }
