@@ -14,7 +14,6 @@ class Player(
     private var game = Game()
     private var communicator = createCommunicator()
 
-    private val gameCodeCharRange: CharRange = ('A'..'Z')
     private var lastGameCodeEntered: String? = null
 
     init {
@@ -157,15 +156,26 @@ class Player(
     }
 
     fun submitGameCode(gameCode: String) {
-        val gameCodeUpperCase = gameCode.uppercase()
-        if (!gameCodeUpperCase.all { gameCodeCharRange.contains(it) }) throw IllegalArgumentException(
-            "The game code should just contain letters (A - Z)."
-        )
-        if (gameCodeUpperCase.length != 5) throw IllegalArgumentException("The game code should have a length of 5.")
+        validateGameCode(gameCode)
 
+        val gameCodeUpperCase = gameCode.uppercase()
         lastGameCodeEntered = gameCodeUpperCase
 
         communicator.sendSubmitGameCode(gameCodeUpperCase)
+    }
+
+    companion object {
+        private val gameCodeCharRange: CharRange = ('A'..'Z')
+
+        @Throws(IllegalArgumentException::class)
+        fun validateGameCode(gameCode: String) {
+            if (!gameCode.uppercase()
+                    .all { gameCodeCharRange.contains(it) }
+            ) throw IllegalArgumentException(
+                "The game code should just contain letters (A - Z)."
+            )
+            if (gameCode.length != 5) throw IllegalArgumentException("The game code should have a length of 5.")
+        }
     }
 
     fun resetBoard() = communicator.sendResetBoard()

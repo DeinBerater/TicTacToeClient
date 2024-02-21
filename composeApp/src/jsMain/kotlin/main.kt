@@ -46,3 +46,9 @@ fun main() {
 suspend fun <T> Promise<T>.await(): T = suspendCoroutine { cont ->
     then({ cont.resume(it) }, { cont.resumeWithException(it) })
 }
+
+inline fun jsObject(init: dynamic.() -> Unit): dynamic {
+    val o = js("{}")
+    init(o)
+    return o
+}
