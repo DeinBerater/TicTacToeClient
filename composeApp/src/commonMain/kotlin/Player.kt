@@ -110,8 +110,6 @@ class Player(
     private fun onOpponentMakeMove(position: Int) {
         game.makeMove(FieldCoordinate(position), true)
 
-        // ToDo: Handle just won
-
         updateUi()
     }
 
