@@ -16,6 +16,8 @@ class Player(
 
     private var lastGameCodeEntered: String? = null
 
+    private var communicatorClosedPurposely = false
+
     init {
         connectWithWebSocket()
     }
@@ -49,6 +51,7 @@ class Player(
 
     suspend fun closeConnection() {
         communicator.closeWebSocket()
+        communicatorClosedPurposely = true
     }
 
     fun restartConnection() {
@@ -64,7 +67,7 @@ class Player(
         println("Listening to incoming bytes...")
         for (incoming in communicator.bytesIncoming) {
             if (incoming == null) {
-                updateChannel.send("Error in WebSocket connection: The connection has been closed.")
+                if (!communicatorClosedPurposely) updateChannel.send("Error in WebSocket connection: The connection has been closed.")
                 return
             }
 
@@ -137,7 +140,6 @@ class Player(
     private suspend fun onGameCodeInvalid() {
         updateChannel.send("This game code is invalid.") // GameCodeInvalid
         lastGameCodeEntered = game.gameCode // Set the last code back for it not to update.
-        updateUi()
     }
 
     private fun getSymbolByBoolean(boolean: Boolean): TicTacToeSymbol {

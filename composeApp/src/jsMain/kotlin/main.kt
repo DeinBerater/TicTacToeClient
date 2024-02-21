@@ -1,8 +1,4 @@
 import communication.doAsynchronously
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
-import kotlin.js.Promise
 
 /** If an error is thrown here, please read the exception message in lines 6-9.
  * */
@@ -18,13 +14,10 @@ val configPrivate = try {
 }
 
 fun main() {
-
     val client = Discord.Client(js("{ intents: [] }"))
 
-    client.login(configPrivate.discord_token as String)
-
     client.on("ready") {
-        console.log("Logged in as ${client.user.tag}!")
+        console.log("Logged in as ${client.asDynamic().user.tag}!")
     }
 
     client.on("interactionCreate") { interaction ->
@@ -34,21 +27,12 @@ fun main() {
         // Interaction is a command interaction
 
         // Now everything in the game is handled in this class
-        val game = DiscordGame(interaction as Discord.CommandInteraction)
+        val discordGame = DiscordGame(interaction as Discord.CommandInteraction)
 
         doAsynchronously {
-            game.startGame()
+            discordGame.startGame()
         }
     }
-}
 
-// Enable promises to be awaited
-suspend fun <T> Promise<T>.await(): T = suspendCoroutine { cont ->
-    then({ cont.resume(it) }, { cont.resumeWithException(it) })
-}
-
-inline fun jsObject(init: dynamic.() -> Unit): dynamic {
-    val o = js("{}")
-    init(o)
-    return o
+    client.asDynamic().login(configPrivate.discord_token as String)
 }

@@ -11,4 +11,11 @@ enum class TicTacToeSymbol {
             O -> X
         }
     }
+
+    fun asEmoji(): String {
+        return when (this) {
+            X -> "❌"
+            O -> "⭕"
+        }
+    }
 }
