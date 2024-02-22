@@ -68,11 +68,11 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
     val scope = rememberCoroutineScope()
 
     val player = Player(scope)
-    val game = player.game()
-
     MaterialTheme(
         colors = if (darkTheme) Colors.darkColors else Colors.lightColors,
     ) {
+        val game = player.game()
+
         // Put EVERYTHING in a box to apply the background color
         Box(Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
 

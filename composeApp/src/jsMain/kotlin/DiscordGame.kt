@@ -1,6 +1,5 @@
 import communication.doAsynchronously
 import game.FieldCoordinate
-import game.Game
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -11,7 +10,6 @@ import kotlin.js.Promise
 class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
     private lateinit var scope: CoroutineScope
     private lateinit var player: Player
-    private lateinit var game: Game
 
     private var connectionClosed = false
     private var messageWithField: Discord.Message? = null
@@ -36,7 +34,6 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
             // The game is trying to be initialized here.
             scope = this
             player = Player(this)
-            game = player.game()
 
 
             gameCodeEntered?.let {
@@ -94,7 +91,8 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
     }
 
     private suspend fun updateBoard() {
-        val winners = game.winner()
+        val currentGame = player.game()
+        val winners = currentGame.winner()
 
         var actionRows = arrayOf<Discord.ActionRowBuilder>()
         for (rowCount in 0..2) {
@@ -103,9 +101,9 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
                 var buttonBuilder = Discord.ButtonBuilder()
                     .setCustomId("" + column + rowCount)
                     .setStyle(Discord.ButtonStyle.Secondary)
-                    .setDisabled(connectionClosed || !game.gameActive || !game.onTurn)
+                    .setDisabled(connectionClosed || !currentGame.gameActive || !currentGame.onTurn)
 
-                val symbolOnField = game.getSymbolByCoords(column, rowCount)
+                val symbolOnField = currentGame.getSymbolByCoords(column, rowCount)
 
                 buttonBuilder = if (symbolOnField == null) {
                     // Zero-width spaces for all buttons to have similar sizes
@@ -150,21 +148,22 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
         actionRows += Discord.ActionRowBuilder().addComponents(disconnectButton)
 
         val emojiOnTurn =
-            if (game.onTurn) game.symbol?.asEmoji() else game.symbol?.other()?.asEmoji()
+            if (currentGame.onTurn) currentGame.symbol?.asEmoji() else currentGame.symbol?.other()
+                ?.asEmoji()
 
         val messageContent =
             if (connectionClosed)
                 "**Connection closed."
             else {
-                "Game code: **${game.gameCode ?: "unknown"}**\n**" +
+                "Game code: **${currentGame.gameCode ?: "unknown"}**\n**" +
                         if (winners != null) {
                             // Winners
-                            (if (game.onTurn) "You " else "Your opponent ") + " won!"
-                        } else if (!game.hasOpponent) {
+                            (if (currentGame.onTurn) "You " else "Your opponent ") + " won!"
+                        } else if (!currentGame.hasOpponent) {
                             "Waiting for opponent..."
                         } else {
                             // No winners
-                            ("$emojiOnTurn " + (if (game.onTurn) "You are" else "Your opponent is") + " on turn! $emojiOnTurn")
+                            ("$emojiOnTurn " + (if (currentGame.onTurn) "It's your" else "Your opponent is on") + " turn! $emojiOnTurn")
                         }
             } + "**"
 

@@ -59,7 +59,7 @@ class Player(
             closeConnection()
             communicator = createCommunicator()
             connectWithWebSocket()
-            game = game()
+            game = Game()
         }
     }
 
@@ -103,6 +103,7 @@ class Player(
             val char = gameCodeCharRange.first + byteDeconstructor.readInt(5)
             gameCode += char
         }
+        game = Game()
         game.gameCode = gameCode
         lastGameCodeEntered = gameCode
 
