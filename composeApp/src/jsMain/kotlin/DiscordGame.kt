@@ -1,5 +1,6 @@
 import communication.doAsynchronously
 import game.FieldCoordinate
+import game.Game
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -10,6 +11,7 @@ import kotlin.js.Promise
 class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
     private lateinit var scope: CoroutineScope
     private lateinit var player: Player
+    private lateinit var game: Game
 
     private var connectionClosed = false
     private var messageWithField: Discord.Message? = null
@@ -34,6 +36,7 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
             // The game is trying to be initialized here.
             scope = this
             player = Player(this)
+            game = player.game()
 
 
             gameCodeEntered?.let {
@@ -86,13 +89,13 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
     }
 
     private suspend fun closeConnection() {
+        println("Closing connection in discord.js...")
         player.closeConnection()
         connectionClosed = true
     }
 
     private suspend fun updateBoard() {
-        val currentGame = player.game()
-        val winners = currentGame.winner()
+        val winners = game.winner()
 
         var actionRows = arrayOf<Discord.ActionRowBuilder>()
         for (rowCount in 0..2) {
@@ -101,9 +104,9 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
                 var buttonBuilder = Discord.ButtonBuilder()
                     .setCustomId("" + column + rowCount)
                     .setStyle(Discord.ButtonStyle.Secondary)
-                    .setDisabled(connectionClosed || !currentGame.gameActive || !currentGame.onTurn)
+                    .setDisabled(connectionClosed || !game.gameActive || !game.onTurn)
 
-                val symbolOnField = currentGame.getSymbolByCoords(column, rowCount)
+                val symbolOnField = game.getSymbolByCoords(column, rowCount)
 
                 buttonBuilder = if (symbolOnField == null) {
                     // Zero-width spaces for all buttons to have similar sizes
@@ -148,33 +151,40 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
         actionRows += Discord.ActionRowBuilder().addComponents(disconnectButton)
 
         val emojiOnTurn =
-            if (currentGame.onTurn) currentGame.symbol?.asEmoji() else currentGame.symbol?.other()
+            if (game.onTurn) game.symbol?.asEmoji() else game.symbol?.other()
                 ?.asEmoji()
 
         val messageContent =
             if (connectionClosed)
                 "**Connection closed."
             else {
-                "Game code: **${currentGame.gameCode ?: "unknown"}**\n**" +
+                "Game code: **${game.gameCode ?: "unknown"}**\n**" +
                         if (winners != null) {
                             // Winners
-                            (if (currentGame.onTurn) "You " else "Your opponent ") + " won!"
-                        } else if (!currentGame.hasOpponent) {
+                            (if (game.onTurn) "You" else "Your opponent") + " won!"
+                        } else if (!game.hasOpponent) {
                             "Waiting for opponent..."
                         } else {
                             // No winners
-                            ("$emojiOnTurn " + (if (currentGame.onTurn) "It's your" else "Your opponent is on") + " turn! $emojiOnTurn")
+                            ("$emojiOnTurn " + (if (game.onTurn) "It's your" else "Your opponent is on") + " turn! $emojiOnTurn")
                         }
             } + "**"
 
         coroutineScope {
-            (originalInteraction.asDynamic()
-                .editReply(jsObject {
-                    content = messageContent
-                    components = actionRows
-                }) as Promise<Discord.Message>).await()
+
+            try {
+                (originalInteraction.asDynamic()
+                    .editReply(jsObject {
+                        content = messageContent
+                        components = actionRows
+                    }) as Promise<Discord.Message>).await()
+            } catch (e: Throwable) {
+                // The board does not exist anymore, thus the connection will be closed.
+                closeConnection()
+            }
 
 
+            // Only create the collector if the message is sent the first time
             if (messageWithField != null) return@coroutineScope
 
 
@@ -204,7 +214,13 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
                         val x = buttonCustomId[0].toString().toInt()
                         val y = buttonCustomId[1].toString().toInt()
 
-                        player.makeMove(x, y)
+                        try {
+                            player.makeMove(x, y)
+                        } catch (e: Exception) {
+                            doAsynchronously {
+                                sendExceptionMessage(e.message ?: "Cannot make a move.")
+                            }
+                        }
                     }
                 }
             }

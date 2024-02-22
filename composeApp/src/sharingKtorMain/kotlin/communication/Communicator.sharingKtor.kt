@@ -28,7 +28,8 @@ class Communicator : BaseCommunicator() {
 
             for (frame in websocketSession.incoming) {
                 if (frame !is Frame.Binary) {
-                    println("Error: Received non-binary frame but expected binary!!!")
+                    if (frame is Frame.Close) println("Received closing frame for a connection.")
+                    else println("Error: Expected binary frame but received ${frame.frameType}!!!")
                     continue
                 }
                 bytesIncoming.send(frame.data)
