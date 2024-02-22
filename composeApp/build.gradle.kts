@@ -30,7 +30,13 @@ kotlin {
     }
 
     js {
-        nodejs {}
+        nodejs {
+            testTask {
+                useMocha {
+                    timeout = "5000"
+                }
+            }
+        }
         useCommonJs()
         binaries.executable()
     }
@@ -89,8 +95,19 @@ kotlin {
             implementation(libs.ktor.client.cio)
         }
 
+
+        val androidUnitTest by getting
+        val desktopTest by getting
+        val jsTest by getting
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+        val sharingKtorTest by creating {
+            dependsOn(commonTest.get())
+            androidUnitTest.dependsOn(this)
+            desktopTest.dependsOn(this)
+            jsTest.dependsOn(this)
         }
     }
 }
