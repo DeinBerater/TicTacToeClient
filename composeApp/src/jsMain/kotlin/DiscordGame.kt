@@ -1,3 +1,4 @@
+import communication.WebSocketNotConnectedException
 import communication.doAsynchronously
 import game.FieldCoordinate
 import game.Game
@@ -67,6 +68,12 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
                     sendExceptionMessage(update)
                 }
             }
+        }
+    }
+
+    private fun sendExceptionMessageAsynchronously(msg: String) {
+        doAsynchronously {
+            sendExceptionMessage(msg)
         }
     }
 
@@ -203,8 +210,22 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
 
                 when (val buttonCustomId =
                     interaction.asDynamic().component?.data.custom_id as String) {
-                    "reset" -> player.resetBoard()
-                    "toggle" -> player.toggleSymbol()
+                    "reset" -> try {
+                        player.resetBoard()
+                    } catch (e: WebSocketNotConnectedException) {
+                        sendExceptionMessageAsynchronously(
+                            e.message ?: "Sorry, there is no connection."
+                        )
+                    }
+
+                    "toggle" -> try {
+                        player.toggleSymbol()
+                    } catch (e: WebSocketNotConnectedException) {
+                        sendExceptionMessageAsynchronously(
+                            e.message ?: "Sorry, there is no connection."
+                        )
+                    }
+
                     "disconnect" -> {
                         collector.asDynamic().stop() as Unit?
                     }
@@ -217,9 +238,7 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
                         try {
                             player.makeMove(x, y)
                         } catch (e: Exception) {
-                            doAsynchronously {
-                                sendExceptionMessage(e.message ?: "Cannot make a move.")
-                            }
+                            sendExceptionMessageAsynchronously(e.message ?: "Cannot make a move.")
                         }
                     }
                 }
