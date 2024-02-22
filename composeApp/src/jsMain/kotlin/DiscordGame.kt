@@ -1,3 +1,5 @@
+import communication.doAsynchronously
+import game.FieldCoordinate
 import game.Game
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
@@ -12,6 +14,7 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
     private lateinit var game: Game
 
     private var connectionClosed = false
+    private var messageWithField: Discord.Message? = null
 
     suspend fun startGame() {
         (originalInteraction.asDynamic().deferReply() as Promise<Discord.Message>).await()
@@ -68,9 +71,8 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
     }
 
     private suspend fun sendExceptionMessage(msg: String) {
-        if (!originalInteraction.asDynamic().replied as Boolean) {
-            player.closeConnection()
-            connectionClosed = true
+        if (!originalInteraction.asDynamic().replied as Boolean && this@DiscordGame::player.isInitialized) {
+            closeConnection()
         }
 
         val embed = Discord.EmbedBuilder()
@@ -81,20 +83,27 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
         originalInteraction.asDynamic().followUp(
             jsObject {
                 embeds = arrayOf(embed)
+                ephemeral = true
             }
         ) as Promise<Discord.Message>
     }
 
-    private fun updateBoard() {
+    private suspend fun closeConnection() {
+        player.closeConnection()
+        connectionClosed = true
+    }
+
+    private suspend fun updateBoard() {
+        val winners = game.winner()
 
         var actionRows = arrayOf<Discord.ActionRowBuilder>()
         for (rowCount in 0..2) {
             val row = Discord.ActionRowBuilder()
             for (column in 0..2) {
                 var buttonBuilder = Discord.ButtonBuilder()
-                    .setCustomId("" + rowCount + column)
+                    .setCustomId("" + column + rowCount)
                     .setStyle(Discord.ButtonStyle.Secondary)
-                    .setDisabled(!game.gameActive || !game.onTurn)
+                    .setDisabled(connectionClosed || !game.gameActive || !game.onTurn)
 
                 val symbolOnField = game.getSymbolByCoords(column, rowCount)
 
@@ -103,7 +112,15 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
                     buttonBuilder.setLabel("\u200B \u200B")
                 } else {
                     buttonBuilder.setEmoji(symbolOnField.asEmoji())
-                        .setStyle(Discord.ButtonStyle.Primary)
+                        .setStyle(
+                            if (winners != null && winners.contains(
+                                    FieldCoordinate(
+                                        column,
+                                        rowCount
+                                    )
+                                )
+                            ) Discord.ButtonStyle.Success else Discord.ButtonStyle.Primary
+                        )
                 }
 
                 row.addComponents(buttonBuilder)
@@ -135,14 +152,70 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
         val emojiOnTurn =
             if (game.onTurn) game.symbol?.asEmoji() else game.symbol?.other()?.asEmoji()
 
-        var messageContent = "Game code: **${game.gameCode ?: "unknown"}**"
-        messageContent += "\n**" + (if (!game.hasOpponent) "Waiting for opponent..." else
-            ("$emojiOnTurn " + (if (game.onTurn) "You are" else "Your opponent is") + " on turn! $emojiOnTurn")) + "**"
+        val messageContent =
+            if (connectionClosed)
+                "**Connection closed."
+            else {
+                "Game code: **${game.gameCode ?: "unknown"}**\n**" +
+                        if (winners != null) {
+                            // Winners
+                            (if (game.onTurn) "You " else "Your opponent ") + " won!"
+                        } else if (!game.hasOpponent) {
+                            "Waiting for opponent..."
+                        } else {
+                            // No winners
+                            ("$emojiOnTurn " + (if (game.onTurn) "You are" else "Your opponent is") + " on turn! $emojiOnTurn")
+                        }
+            } + "**"
 
-        (originalInteraction.asDynamic()
-            .editReply(jsObject {
-                content = messageContent
-                components = actionRows
-            }) as Promise<Discord.Message>)
+        coroutineScope {
+            (originalInteraction.asDynamic()
+                .editReply(jsObject {
+                    content = messageContent
+                    components = actionRows
+                }) as Promise<Discord.Message>).await()
+
+
+            if (messageWithField != null) return@coroutineScope
+
+
+            messageWithField =
+                (originalInteraction.asDynamic().fetchReply() as Promise<Discord.Message>).await()
+
+            val collector = messageWithField.asDynamic()
+                .createMessageComponentCollector(jsObject {
+                    time = 5 * 60 * 1000 // 5 minutes
+                }) as Discord.InteractionCollector
+
+            collector.on("collect") { interaction ->
+                interaction.asDynamic().deferUpdate()
+
+                collector.asDynamic().resetTimer()
+
+                when (val buttonCustomId =
+                    interaction.asDynamic().component?.data.custom_id as String) {
+                    "reset" -> player.resetBoard()
+                    "toggle" -> player.toggleSymbol()
+                    "disconnect" -> {
+                        collector.asDynamic().stop() as Unit?
+                    }
+
+                    else -> {
+                        if (!Regex("\\d\\d").matches(buttonCustomId)) return@on
+                        val x = buttonCustomId[0].toString().toInt()
+                        val y = buttonCustomId[1].toString().toInt()
+
+                        player.makeMove(x, y)
+                    }
+                }
+            }
+
+            collector.on("end") {
+                doAsynchronously {
+                    closeConnection()
+                    updateBoard()
+                }
+            }
+        }
     }
 }

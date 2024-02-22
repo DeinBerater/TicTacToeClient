@@ -42,7 +42,7 @@ class Game {
     }
 
     /** Sets a symbol on the board (make a move)
-     * @param position the position to set a symbol on
+     * @param coordinate the position to set a symbol on
      * @param opponent if the player or the opponent makes the move
      * @throws GameNotActiveException if the game is not active, meaning nothing can be placed
      * @throws NotOnTurnException if the player playing this game is making a move and is not on turn

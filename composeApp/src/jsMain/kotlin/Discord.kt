@@ -36,4 +36,8 @@ external object Discord {
         val Secondary: ButtonStyle
         val Success: ButtonStyle
     }
+
+    class InteractionCollector {
+        fun on(s: String, function: (Any?) -> Unit)
+    }
 }
