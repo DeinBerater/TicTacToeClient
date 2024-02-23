@@ -65,9 +65,12 @@ class Player(
 
     fun restartConnection() {
         scope.launch {
+            println("Restarting... Closing connection...")
             closeConnection()
+            println("Restarting... Connection closed, now reconnecting...")
             communicator = createCommunicator()
             connectWithWebSocket()
+            println("Connection restarted. Creating new game...")
             game = Game()
         }
     }

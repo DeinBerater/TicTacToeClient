@@ -170,7 +170,9 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
                         if (winners != null) {
                             // Winners
                             (if (game.onTurn) "You" else "Your opponent") + " won!"
-                        } else if (!game.hasOpponent) {
+                        } else if (game.boardFull()) {
+                            "It's a draw!"
+                        } else if (!game.hasOpponent) { // ToDo: Only one player in discord (filter user)
                             "Waiting for opponent..."
                         } else {
                             // No winners
@@ -201,11 +203,14 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
 
             val collector = messageWithField.asDynamic()
                 .createMessageComponentCollector(jsObject {
+                    filter =
+                        { interaction: dynamic -> interaction.user.id == originalInteraction.asDynamic().user.id }
                     time = 5 * 60 * 1000 // 5 minutes
                 }) as Discord.InteractionCollector
 
             collector.on("collect") { interaction ->
                 interaction.asDynamic().deferUpdate()
+                if (interaction.asDynamic().user.id != originalInteraction.asDynamic().user.id) return@on
 
                 collector.asDynamic().resetTimer()
 

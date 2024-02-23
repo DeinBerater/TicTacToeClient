@@ -74,8 +74,6 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
     MaterialTheme(
         colors = if (darkTheme) Colors.darkColors else Colors.lightColors,
     ) {
-        val game = player.game()
-
         // Put EVERYTHING in a box to apply the background color
         Box(Modifier.fillMaxSize().background(MaterialTheme.colors.background)) {
 
@@ -120,11 +118,13 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                var game by remember { mutableStateOf(player.game()) }
+                var winner by remember { mutableStateOf(null as List<FieldCoordinate>?) }
+
                 val codeCopied = remember { mutableStateOf(false) }
 
                 var timesUpdated by remember { mutableStateOf("") }
 
-                var winner by remember { mutableStateOf(null as List<FieldCoordinate>?) }
 
                 Text(timesUpdated) // This is needed to update the ui on game changes..
 
@@ -140,6 +140,8 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     // Change anything to update the UI.. Little trick (we do not talk about that.)
                     timesUpdated = if (timesUpdated == "") " " else ""
                     codeCopied.value = false // Reset copy button color
+
+                    game = player.game()
                     winner = game.winner()
                 }
 
@@ -346,7 +348,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                             try {
                                 player.resetBoard()
                             } catch (e: WebSocketNotConnectedException) {
-                                onException("There is no connection.")
+                                onException("Error in WebSocket connection: There is no connection.")
                             }
                         },
                         shape = RoundedCornerShape(50),
@@ -364,7 +366,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                             try {
                                 player.toggleSymbol()
                             } catch (e: WebSocketNotConnectedException) {
-                                onException("There is no connection.")
+                                onException("Error in WebSocket connection: There is no connection.")
                             }
                         },
                         shape = RoundedCornerShape(50),
