@@ -218,6 +218,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 val mainText =
                     if (!game.hasOpponent) "No opponent connected."
                     else if (winner != null) (if (game.onTurn) "You" else "The opponent") + " won!"
+                    else if (game.boardFull()) "It's a draw!"
                     else if (game.onTurn) "It's your turn!"
                     else "Waiting for opponent to move..."
 

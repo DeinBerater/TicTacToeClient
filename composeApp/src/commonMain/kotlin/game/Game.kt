@@ -128,4 +128,8 @@ class Game {
         val symbolToCheck = fields[fieldIndexes.first()] ?: return false
         return fieldIndexes.drop(1).all { fields[it] == symbolToCheck }
     }
+
+    fun boardFull(): Boolean {
+        return fields.all { it != null }
+    }
 }

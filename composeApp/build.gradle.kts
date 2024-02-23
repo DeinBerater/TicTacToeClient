@@ -103,11 +103,15 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+
         val sharingKtorTest by creating {
             dependsOn(commonTest.get())
+            jsTest.dependsOn(this)
+        }
+        val androidDesktopTest by creating {
+            dependsOn(sharingKtorTest)
             androidUnitTest.dependsOn(this)
             desktopTest.dependsOn(this)
-            jsTest.dependsOn(this)
         }
     }
 }

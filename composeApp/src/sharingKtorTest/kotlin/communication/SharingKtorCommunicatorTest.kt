@@ -17,7 +17,7 @@ class SharingKtorCommunicatorTest {
 
         string += "c"
 
-        val want = "acb"
+        val want = "ac"
         val have = string
 
         assertEquals(want, have)

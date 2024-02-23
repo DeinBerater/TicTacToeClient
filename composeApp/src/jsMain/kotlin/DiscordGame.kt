@@ -2,6 +2,7 @@ import communication.WebSocketNotConnectedException
 import communication.doAsynchronously
 import game.FieldCoordinate
 import game.Game
+import game.exceptions.FieldAlreadyOccupiedException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -146,7 +147,7 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
             .setStyle(Discord.ButtonStyle.Primary)
             .setLabel("Toggle symbol")
             .setCustomId("toggle")
-            .setDisabled(connectionClosed)
+            .setDisabled(game.hasOpponent || connectionClosed)
 
         val disconnectButton = Discord.ButtonBuilder()
             .setStyle(Discord.ButtonStyle.Danger)
@@ -237,12 +238,14 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
 
                         try {
                             player.makeMove(x, y)
+                        } catch (_: FieldAlreadyOccupiedException) { // Ignore it if the field is already occupied
                         } catch (e: Exception) {
                             sendExceptionMessageAsynchronously(e.message ?: "Cannot make a move.")
                         }
                     }
                 }
             }
+
 
             collector.on("end") {
                 doAsynchronously {

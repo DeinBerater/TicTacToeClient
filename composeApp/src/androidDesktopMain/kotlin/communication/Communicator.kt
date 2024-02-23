@@ -3,11 +3,13 @@ package communication
 import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.engine.cio.CIO
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 actual fun getCommunicatorEngine(): HttpClientEngineFactory<HttpClientEngineConfig> = CIO
 
+@OptIn(DelicateCoroutinesApi::class)
 actual fun doAsynchronously(block: suspend () -> Unit) {
-    runBlocking { launch { block() } }
+    GlobalScope.launch { block() }
 }
