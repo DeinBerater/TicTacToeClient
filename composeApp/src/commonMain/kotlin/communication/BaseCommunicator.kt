@@ -1,6 +1,5 @@
 package communication
 
-import OutgoingPacketType
 import kotlinx.coroutines.channels.Channel
 
 abstract class BaseCommunicator {

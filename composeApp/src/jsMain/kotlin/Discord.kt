@@ -26,12 +26,10 @@ external object Discord {
         fun setEmoji(emoji: Any): ButtonBuilder
         fun setLabel(label: String): ButtonBuilder
         fun setStyle(style: ButtonStyle): ButtonBuilder
-        fun setURL(url: String): ButtonBuilder
     }
 
     object ButtonStyle {
         val Danger: ButtonStyle
-        val Link: ButtonStyle
         val Primary: ButtonStyle
         val Secondary: ButtonStyle
         val Success: ButtonStyle

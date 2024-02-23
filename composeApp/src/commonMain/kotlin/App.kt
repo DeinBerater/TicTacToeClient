@@ -32,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -44,6 +45,8 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -61,7 +64,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 
 
-@OptIn(ExperimentalResourceApi::class)
+@OptIn(ExperimentalResourceApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
 
@@ -179,6 +182,9 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 }
 
                 var gameCodeEntered by remember { mutableStateOf("") }
+                val keyboardController = LocalSoftwareKeyboardController.current
+                val focusManager = LocalFocusManager.current
+
                 fun onCodeSubmit() {
                     try {
                         player.submitGameCode(gameCodeEntered)
@@ -186,6 +192,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                         onException(e.message ?: e::class.simpleName ?: "Unknown error.")
                     }
                 }
+
                 TextField(
                     modifier = Modifier.padding(10.dp).onKeyEvent {
                         if (it.key == Key.Enter || it.key == Key.NumPadEnter) {
@@ -211,7 +218,12 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                         cursorColor = MaterialTheme.colors.primary
                     ),
                     keyboardActions = KeyboardActions(
-                        onDone = { onCodeSubmit() }
+                        onDone = {
+                            onCodeSubmit()
+                            keyboardController?.hide()
+                            gameCodeEntered = ""
+                            focusManager.clearFocus()
+                        }
                     )
                 )
 

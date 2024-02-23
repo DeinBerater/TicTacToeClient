@@ -1,3 +1,5 @@
+package communication
+
 /** The type of packet sent by the client.
  * */
 enum class OutgoingPacketType {
