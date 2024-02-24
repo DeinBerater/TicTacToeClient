@@ -118,7 +118,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                var game by remember { mutableStateOf(player.game()) }
+                var game by remember { mutableStateOf(player.game) }
                 var winner by remember { mutableStateOf(null as List<FieldCoordinate>?) }
 
                 val codeCopied = remember { mutableStateOf(false) }
@@ -141,7 +141,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
                     timesUpdated = if (timesUpdated == "") " " else ""
                     codeCopied.value = false // Reset copy button color
 
-                    game = player.game()
+                    game = player.game
                     winner = game.winner()
                 }
 

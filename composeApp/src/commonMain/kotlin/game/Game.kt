@@ -62,7 +62,7 @@ class Game {
         fields[position] = if (!opponent) symbol else symbol?.other()
 
         // Turns change. If the opponent just made a move, then this player is on turn.
-        if (winner() == null) {
+        if (winner() == null && !boardFull()) {
             onTurn = opponent
         } else gameActive = false
     }

@@ -13,7 +13,9 @@ class Player(
     private val scope: CoroutineScope
 ) {
     val updateChannel = Channel<String?>()
-    private var game = Game()
+    var game = Game()
+        private set
+
     private var communicator = createCommunicator()
 
     private var lastGameCodeEntered: String? = null
@@ -47,9 +49,6 @@ class Player(
             listenToIncomingBytes()
         }
     }
-
-    /** Get the game */
-    fun game() = game
 
     private fun updateUi() {
         println("Updating ui...")
@@ -132,7 +131,10 @@ class Player(
         val symbol = getSymbolByBoolean(byteDeconstructor.readBoolean())
         game.onTurn = byteDeconstructor.readBoolean()
         game.hasOpponent = byteDeconstructor.readBoolean()
-        if (byteDeconstructor.readBoolean()) game.setGameActive(symbol) else game.symbol = symbol
+        if (byteDeconstructor.readBoolean()) game.setGameActive(symbol) else {
+            game.symbol = symbol
+            game.deactivateGame()
+        }
         game.gameCode = lastGameCodeEntered
 
         val boardFields = mutableListOf<TicTacToeSymbol?>()
