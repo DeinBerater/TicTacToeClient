@@ -66,11 +66,9 @@ import org.jetbrains.compose.resources.painterResource
 
 @OptIn(ExperimentalResourceApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
-
+fun App(player: Player, darkTheme: Boolean = isSystemInDarkTheme()) {
     val scope = rememberCoroutineScope()
 
-    val player = Player(scope)
     MaterialTheme(
         colors = if (darkTheme) Colors.darkColors else Colors.lightColors,
     ) {
@@ -143,6 +141,7 @@ fun App(darkTheme: Boolean = isSystemInDarkTheme()) {
 
                     game = player.game
                     winner = game.winner()
+
                 }
 
                 val displayedGameCode = game.gameCode ?: "-"

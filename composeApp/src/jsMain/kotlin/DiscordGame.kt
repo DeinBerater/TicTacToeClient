@@ -38,7 +38,7 @@ class DiscordGame(private val originalInteraction: Discord.CommandInteraction) {
             // The game is trying to be initialized here.
             scope = this
             player = Player(this)
-            game = player.game()
+            game = player.game
 
 
             gameCodeEntered?.let {
