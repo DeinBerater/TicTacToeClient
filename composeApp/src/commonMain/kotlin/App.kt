@@ -187,6 +187,7 @@ fun App(player: Player, darkTheme: Boolean = isSystemInDarkTheme()) {
                 val focusManager = LocalFocusManager.current
 
                 fun onCodeSubmit() {
+                    println("Submitting game code: $gameCodeEntered")
                     try {
                         player.submitGameCode(gameCodeEntered)
                     } catch (e: Exception) {
@@ -203,7 +204,7 @@ fun App(player: Player, darkTheme: Boolean = isSystemInDarkTheme()) {
                     },
                     value = gameCodeEntered,
                     onValueChange = {
-                        gameCodeEntered = it.uppercase()
+                        gameCodeEntered = it.uppercase().trim()
                     },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Ascii,
