@@ -78,6 +78,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel.ktx)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+            implementation("com.garmin.connectiq:ciq-companion-app-sdk:2.0.2@aar")
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

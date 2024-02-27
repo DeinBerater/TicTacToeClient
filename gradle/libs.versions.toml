@@ -11,6 +11,7 @@ androidx-espresso-core = "3.5.1"
 androidx-material = "1.11.0"
 androidx-test-junit = "1.1.5"
 buildkonfigGradlePlugin = "latest_version"
+ciqCompanionAppSdk = "2.0.3"
 compose = "1.6.2"
 compose-plugin = "1.6.0-alpha01"
 junit = "4.13.2"
@@ -29,6 +30,7 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 buildkonfig-gradle-plugin = { module = "com.codingfeline.buildkonfig:buildkonfig-gradle-plugin", version.ref = "buildkonfigGradlePlugin" }
+ciq-companion-app-sdk = { module = "com.garmin.connectiq:ciq-companion-app-sdk", version.ref = "ciqCompanionAppSdk" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
