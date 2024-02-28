@@ -13,7 +13,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class IQCommunicator(val context: Context) {
+class IQCommunicator(private val context: Context) {
     private val connectType = ConnectIQ.IQConnectType.WIRELESS // TETHERED
 
     val iqAppCommunicators = mutableListOf<IQAppCommunicator>()
@@ -84,13 +84,12 @@ class IQCommunicator(val context: Context) {
 
 
         // The connect iq app is installed on at least one device, so the communicator is initialized now.
-        Log.d("IQConnection", "Sdk is ready now.")
+        Log.d("IQConnection", "Sdk is ready now. ${iqAppCommunicators.size} devices initialized.")
     }
 
 
     private suspend fun initializeConnectIQ(onSdkShutDown: () -> Unit) =
         suspendCoroutine { continuation ->
-
             connectIQInstance.initialize(context, false, object : ConnectIQ.ConnectIQListener {
 
                 // Called when the SDK has been successfully initialized
@@ -146,4 +145,9 @@ class IQCommunicator(val context: Context) {
             if (status == IQDevice.IQDeviceStatus.CONNECTED) deviceAppCommunicator.continueQueue() else deviceAppCommunicator.stopQueue()
         }
     }
+
+    fun closeCommunicator() {
+        connectIQInstance.shutdown(context)
+    }
+
 }
