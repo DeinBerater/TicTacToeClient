@@ -58,6 +58,7 @@ class Player(
     }
 
     suspend fun closeConnection() {
+        println("Closing connection...")
         communicator.closeWebSocket()
         communicatorClosedPurposely = true
     }

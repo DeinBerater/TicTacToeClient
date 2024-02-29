@@ -2,6 +2,7 @@ package de.deinberater.tictactoe.garmincommunication
 
 import Player
 import communication.ByteBuilder
+import communication.WebSocketNotConnectedException
 import game.FieldCoordinate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -21,20 +22,32 @@ class GarminGame(
         for (garminData in garminCommunicator.appReceiveChannel) {
             println(garminData.toString())
             // The code in here should be non-blocking.
-            if (garminData !is List<*>) return
-            if (garminData.size != 1) return
-            val intSentFromDevice = garminData.first() as? Int ?: return
-            // Date is now an integer.
+            if (garminData !is List<*>) continue
+            if (garminData.size != 1) continue
+            val intSentFromDevice = garminData.first() as? Int ?: continue
+            // Data is now an integer.
 
             println("Data received: $garminData")
             if (!this@GarminGame::player.isInitialized) {
                 player = Player(scope)
                 scope.launch { listenToGameUpdates() }
+                continue
             }
+
             when (intSentFromDevice) {
-                0 -> continue
-                1 -> player.toggleSymbol()
-                2 -> player.resetBoard()
+                0 -> transmitCurrentGame()
+                1 -> try {
+                    player.toggleSymbol()
+                } catch (e: WebSocketNotConnectedException) {
+                    garminCommunicator.transmitData("There is no connection.")
+                }
+
+                2 -> try {
+                    player.resetBoard()
+                } catch (e: WebSocketNotConnectedException) {
+                    garminCommunicator.transmitData("There is no connection.")
+                }
+
                 else -> {
                     val fieldCoordinate = FieldCoordinate(intSentFromDevice - 2)
                     try {

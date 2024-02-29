@@ -5,6 +5,7 @@ import android.util.Log
 import com.garmin.android.connectiq.ConnectIQ
 import com.garmin.android.connectiq.IQApp
 import com.garmin.android.connectiq.IQDevice
+import com.garmin.android.connectiq.exception.InvalidStateException
 import de.deinberater.tictactoe.garmincommunication.exceptions.IQInitializeException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
@@ -63,7 +64,6 @@ class IQCommunicator(private val context: Context) {
                     )
                     registerDeviceForEvents(it)
 
-                    println("registering for app events.")
                     // Register to receive messages from the application
                     connectIQInstance.registerForAppEvents(it, app) { _, _, messageData, status ->
                         if (status != ConnectIQ.IQMessageStatus.SUCCESS) {
@@ -158,7 +158,7 @@ class IQCommunicator(private val context: Context) {
                 it.sendingJob?.cancel() // Cancel all sending jobs / active queues to avoid unnecessary memory usage.
             }
             connectIQInstance.shutdown(context)
-        } catch (illegalStateException: IllegalStateException) {
+        } catch (illegalStateException: InvalidStateException) {
             // In this case, the sdk is usually shut down already, thus it can be ignored.
         }
     }

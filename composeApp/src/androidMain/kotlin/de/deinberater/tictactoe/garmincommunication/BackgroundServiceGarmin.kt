@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import de.deinberater.tictactoe.MainActivity
 import de.deinberater.tictactoe.R
 import de.deinberater.tictactoe.garmincommunication.exceptions.IQInitializeException
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +26,7 @@ class BackgroundServiceGarmin : Service() {
     companion object {
         private const val NOTIFICATION_ID = 1
         private const val NOTIFICATION_CHANNEL_ID = "Notifications_Garmin_Background"
+        private const val ACTION_STOP_SERVICE = "STOP_GARMIN_SERVICE"
     }
 
     // Needed for interface
@@ -35,6 +35,10 @@ class BackgroundServiceGarmin : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (ACTION_STOP_SERVICE == intent?.action) {
+            println("Cancelling Garmin service after button press...")
+            stopSelf()
+        }
 
         // The service only works after android 8.
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
@@ -88,11 +92,10 @@ class BackgroundServiceGarmin : Service() {
 
     private fun showNotification() {
 
-        val notificationIntent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0,
-            notificationIntent, PendingIntent.FLAG_IMMUTABLE
-        )
+        val stopSelf = Intent(this, BackgroundServiceGarmin::class.java)
+        stopSelf.setAction(ACTION_STOP_SERVICE)
+        val pStopSelf = PendingIntent.getService(this, 0, stopSelf, PendingIntent.FLAG_IMMUTABLE)
+
         try {
             startForeground(
                 NOTIFICATION_ID, NotificationCompat.Builder(
@@ -103,14 +106,13 @@ class BackgroundServiceGarmin : Service() {
                     .setSmallIcon(R.drawable.ic_launcher_foreground)
                     .setContentTitle("TicTacToe service active.")
                     .setContentText("You can now play TicTacToe from your Garmin device.")
-                    .setContentIntent(pendingIntent)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .addAction(R.drawable.ic_launcher_foreground, "Stop", pStopSelf)
                     .build()
             )
         } catch (e: Exception) {
             println("Cannot start service: ${e.message}")
         }
-
-        // ToDo: Button to stop service
     }
 
     override fun onDestroy() {
