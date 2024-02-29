@@ -1,7 +1,7 @@
 package game
 
 enum class TicTacToeSymbol {
-    X, O;
+    O, X;
 
     /** Get the other symbol.
      * */

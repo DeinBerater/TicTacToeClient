@@ -54,7 +54,7 @@ class BackgroundServiceGarmin : Service() {
 
 
         val applicationId =
-            "bcb1be56-6900-475a-ba38-e3e17ac28bb1" // ToDo: Create application and insert id here
+            "" // ToDo: Create application and insert id here
 
 
         scope.launch {
@@ -67,7 +67,7 @@ class BackgroundServiceGarmin : Service() {
                 val deviceCommunicators = iqCommunicator.iqAppCommunicators
 
                 deviceCommunicators.forEach {
-                    val game = GarminGame(it)
+                    val game = GarminGame(it, scope)
                     scope.launch {
                         game.listenToGarminDevice()
                     }
