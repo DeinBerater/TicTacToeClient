@@ -88,7 +88,7 @@ class IQCommunicator(private val context: Context) {
     }
 
 
-    private suspend fun initializeConnectIQ(onSdkShutDown: () -> Unit) =
+    private suspend fun initializeConnectIQ(onSdkShutDownParam: () -> Unit) =
         suspendCoroutine { continuation ->
             connectIQInstance.initialize(context, false, object : ConnectIQ.ConnectIQListener {
 
@@ -102,12 +102,13 @@ class IQCommunicator(private val context: Context) {
                     // A failure has occurred during initialization. Inspect
                     // the IQSdkErrorStatus value for more information regarding
                     // the failure.
+                    closeCommunicator()
                     continuation.resumeWithException(IQInitializeException("Can't initialize! Status: $status"))
                 }
 
                 // Called when the SDK has been shut down
                 override fun onSdkShutDown() {
-                    onSdkShutDown()
+                    onSdkShutDownParam()
                 }
             })
 
@@ -147,7 +148,11 @@ class IQCommunicator(private val context: Context) {
     }
 
     fun closeCommunicator() {
-        connectIQInstance.shutdown(context)
+        try {
+            connectIQInstance.shutdown(context)
+        } catch (illegalStateException: IllegalStateException) {
+            // In this case, the sdk is usually shut down already, thus it can be ignored.
+        }
     }
 
 }

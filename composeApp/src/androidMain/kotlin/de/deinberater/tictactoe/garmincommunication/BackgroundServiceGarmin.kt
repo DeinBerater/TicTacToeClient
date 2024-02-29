@@ -9,13 +9,12 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.garmin.android.connectiq.ConnectIQ
 import de.deinberater.tictactoe.MainActivity
 import de.deinberater.tictactoe.R
+import de.deinberater.tictactoe.garmincommunication.exceptions.IQInitializeException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -56,56 +55,31 @@ class BackgroundServiceGarmin : Service() {
 
         val applicationId = "" // ToDo: Create application and insert id here
 
-        val connectIQInstance = ConnectIQ.getInstance(this, ConnectIQ.IQConnectType.WIRELESS)
-        connectIQInstance.initialize(this, false, object : ConnectIQ.ConnectIQListener {
+        scope.launch {
+            try {
+                Log.d("IQConnection", "Trying to initialize Connect IQ app...")
+                iqCommunicator.initializeCommunicator(applicationId) {
+                    stopSelf()
+                }
 
-            // Called when the SDK has been successfully initialized
-            override fun onSdkReady() {
+                val deviceCommunicators = iqCommunicator.iqAppCommunicators
 
-            }
+                deviceCommunicators.forEach {
+                    val game = GarminGame(it)
+                    launch {
+                        game.listenToGarminDevice()
+                    }
+                }
 
-            // Called when initialization fails.
-            override fun onInitializeError(status: ConnectIQ.IQSdkErrorStatus) {
-                // A failure has occurred during initialization. Inspect
-                // the IQSdkErrorStatus value for more information regarding
-                // the failure.
-                println("shutting down...")
-                connectIQInstance.shutdown(this@BackgroundServiceGarmin)
+            } catch (exception: IQInitializeException) {
+                println("IQ initialization failed: ${exception.message}")
                 stopSelf()
+                return@launch
             }
 
-            // Called when the SDK has been shut down
-            override fun onSdkShutDown() {
-                println("shut down.")
-            }
-        })
-
-//        scope.launch {
-//            try {
-//                Log.d("IQConnection", "Trying to initialize Connect IQ app...")
-//                iqCommunicator.initializeCommunicator(applicationId) {
-//                    println("onsdkshutdown")
-////                    closeService()
-//                }
-//
-//                val deviceCommunicators = iqCommunicator.iqAppCommunicators
-//
-//                deviceCommunicators.forEach {
-//                    val game = GarminGame(it)
-//                    launch {
-//                        game.listenToGarminDevice()
-//                    }
-//                }
-//
-//            } catch (exception: IQInitializeException) {
-//                println("IQ initialization failed: ${exception.message}")
-//                closeService()
-//                return@launch
-//            }
-//
-//            println("Showing notification...")
-//            showNotification()
-//        }
+            println("Showing notification...")
+            showNotification()
+        }
 
         return super.onStartCommand(intent, flags, startId)
     }
@@ -133,24 +107,11 @@ class BackgroundServiceGarmin : Service() {
         // ToDo: Button to stop service
     }
 
-    private fun closeService() {
-        Log.i(
-            getString(R.string.app_name),
-            "Closing Garmin service..."
-        )
-        // iqCommunicator.closeCommunicator()
-        scope.launch {
-            delay(3000L)
-            println("Stopping self.")
-            stopSelf()
-        }
-    }
-
     override fun onDestroy() {
-        println("onDestroy called!")
-//         iqCommunicator.closeCommunicator()
+        // Shutdown the ConnectIQ instance to ensure it unregisters the receiver.
+        iqCommunicator.closeCommunicator()
 
-        super.onDestroy()
         job.cancel()
+        super.onDestroy()
     }
 }
