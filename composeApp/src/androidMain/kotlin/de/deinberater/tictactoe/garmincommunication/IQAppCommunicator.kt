@@ -6,10 +6,14 @@ import com.garmin.android.connectiq.IQApp
 import com.garmin.android.connectiq.IQDevice
 import de.deinberater.nigglgarminmobile.devicecommunication.Queue
 import de.deinberater.nigglgarminmobile.devicecommunication.QueueState
+import de.deinberater.nigglgarminmobile.devicecommunication.exceptions.DataTransmissionException
 import kotlinx.coroutines.channels.Channel
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 class IQAppCommunicator(
-    val appReceiveChannel: Channel<MutableList<Any>>, private val transmittingInstance: ConnectIQ,
+    val appReceiveChannel: Channel<Any>, private val transmittingInstance: ConnectIQ,
     private val iqApp: IQApp,
     private val device: IQDevice
 ) {
@@ -36,5 +40,12 @@ class IQAppCommunicator(
 
     fun continueQueue() {
         TODO()
+    }
+
+    private suspend fun transmit(data: MutableList<Any>) = suspendCoroutine { continuation ->
+        transmittingInstance.sendMessage(device, iqApp, data) { _, _, status ->
+            if (status == ConnectIQ.IQMessageStatus.SUCCESS) continuation.resume(Unit)
+            else continuation.resumeWithException(DataTransmissionException("Transmission status is $status."))
+        }
     }
 }

@@ -9,6 +9,7 @@ import de.deinberater.tictactoe.garmincommunication.exceptions.IQInitializeExcep
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -50,7 +51,7 @@ class IQCommunicator(private val context: Context) {
                         return@launch
                     }
 
-                    val receiveChannel = Channel<MutableList<Any>>()
+                    val receiveChannel = Channel<Any>()
                     val thisCommunicator =
                         IQAppCommunicator(receiveChannel, connectIQInstance, app, it)
 
@@ -70,7 +71,7 @@ class IQCommunicator(private val context: Context) {
                             return@registerForAppEvents
                         }
 
-                        launch {
+                        runBlocking {
                             receiveChannel.send(messageData)
                         }
                     }
@@ -94,6 +95,7 @@ class IQCommunicator(private val context: Context) {
 
                 // Called when the SDK has been successfully initialized
                 override fun onSdkReady() {
+                    println("Garmin SDK ready.")
                     continuation.resume(Unit)
                 }
 

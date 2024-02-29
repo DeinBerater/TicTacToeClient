@@ -91,18 +91,22 @@ class BackgroundServiceGarmin : Service() {
             this, 0,
             notificationIntent, PendingIntent.FLAG_IMMUTABLE
         )
-        startForeground(
-            NOTIFICATION_ID, NotificationCompat.Builder(
-                this,
-                NOTIFICATION_CHANNEL_ID
+        try {
+            startForeground(
+                NOTIFICATION_ID, NotificationCompat.Builder(
+                    this,
+                    NOTIFICATION_CHANNEL_ID
+                )
+                    .setOngoing(true)
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentTitle("TicTacToe service active.")
+                    .setContentText("You can now play TicTacToe from your Garmin device.")
+                    .setContentIntent(pendingIntent)
+                    .build()
             )
-                .setOngoing(true)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("TicTacToe service active.")
-                .setContentText("You can now play TicTacToe from your Garmin device.")
-                .setContentIntent(pendingIntent)
-                .build()
-        )
+        } catch (e: Exception) {
+            println("Cannot start service: ${e.message}")
+        }
 
         // ToDo: Button to stop service
     }
