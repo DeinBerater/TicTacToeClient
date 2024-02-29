@@ -53,12 +53,14 @@ class BackgroundServiceGarmin : Service() {
         notificationManager.createNotificationChannel(mChannel)
 
 
-        val applicationId = "" // ToDo: Create application and insert id here
+        val applicationId =
+            "bcb1be56-6900-475a-ba38-e3e17ac28bb1" // ToDo: Create application and insert id here
+
 
         scope.launch {
             try {
                 Log.d("IQConnection", "Trying to initialize Connect IQ app...")
-                iqCommunicator.initializeCommunicator(applicationId) {
+                iqCommunicator.initializeCommunicator(applicationId, scope) {
                     stopSelf()
                 }
 
@@ -66,7 +68,7 @@ class BackgroundServiceGarmin : Service() {
 
                 deviceCommunicators.forEach {
                     val game = GarminGame(it)
-                    launch {
+                    scope.launch {
                         game.listenToGarminDevice()
                     }
                 }
@@ -112,6 +114,8 @@ class BackgroundServiceGarmin : Service() {
     }
 
     override fun onDestroy() {
+        println("Garmin Service onDestroy")
+
         // Shutdown the ConnectIQ instance to ensure it unregisters the receiver.
         iqCommunicator.closeCommunicator()
 

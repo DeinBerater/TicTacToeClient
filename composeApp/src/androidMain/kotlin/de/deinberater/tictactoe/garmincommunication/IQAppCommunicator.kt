@@ -1,51 +1,79 @@
 package de.deinberater.tictactoe.garmincommunication
 
-import android.util.Log
 import com.garmin.android.connectiq.ConnectIQ
 import com.garmin.android.connectiq.IQApp
 import com.garmin.android.connectiq.IQDevice
-import de.deinberater.nigglgarminmobile.devicecommunication.Queue
-import de.deinberater.nigglgarminmobile.devicecommunication.QueueState
 import de.deinberater.nigglgarminmobile.devicecommunication.exceptions.DataTransmissionException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
+
 
 class IQAppCommunicator(
     val appReceiveChannel: Channel<Any>, private val transmittingInstance: ConnectIQ,
     private val iqApp: IQApp,
-    private val device: IQDevice
+    private val device: IQDevice,
+    private val sendingQueueScope: CoroutineScope
 ) {
-    private val queue = Queue<MutableList<Any>>()
-    private var queueState = QueueState.READY
-        set(value) {
-            Log.d(
-                "IQConnection",
-                "Setting queue state from $field to $value for app with id ${iqApp.applicationId} and device ${device.deviceIdentifier}."
-            )
-            field = value
-        }
+    private val queue = Channel<Any>()
+    var sendingJob: Job? = null
+        private set
 
-    fun transmitData(data: MutableList<Any>) {
-        // ToDo: Add to queue (Flow?)
+    init {
+        continueQueue() // Also starts the queue
     }
 
+    private suspend fun runQueue() {
+        for (itemToSend in queue) {
+            try {
+                println("Now trying to transmit $itemToSend.")
+                transmit(itemToSend)
+            } catch (e: DataTransmissionException) {
+                println("Could not transmit $itemToSend: ${e.message}")
+            } catch (e: TimeoutCancellationException) {
+                println("Timeout reached trying to transmit.")
+            }
+        }
+    }
+
+    fun transmitData(data: Any) {
+        sendingQueueScope.launch {
+            queue.send(data)
+        }
+    }
 
     fun getDeviceId() = device.deviceIdentifier
 
     fun stopQueue() {
-        queueState = QueueState.IDLE
+        if (sendingJob == null || sendingJob?.isActive != true) return // Queue is not initialized or not active
+
+        println("Transmission queue paused.")
+        sendingJob?.cancel()
     }
 
     fun continueQueue() {
-        TODO()
+        if (sendingJob?.isActive == true) return // Queue is already active
+
+        println("Transmission queue continuing...")
+        sendingJob = sendingQueueScope.launch {
+            runQueue()
+        }
     }
 
-    private suspend fun transmit(data: MutableList<Any>) = suspendCoroutine { continuation ->
-        transmittingInstance.sendMessage(device, iqApp, data) { _, _, status ->
-            if (status == ConnectIQ.IQMessageStatus.SUCCESS) continuation.resume(Unit)
-            else continuation.resumeWithException(DataTransmissionException("Transmission status is $status."))
+    private suspend fun transmit(data: Any) {
+        withTimeout(5000L) {
+            suspendCancellableCoroutine { continuation ->
+                transmittingInstance.sendMessage(device, iqApp, data) { _, _, status ->
+                    if (status == ConnectIQ.IQMessageStatus.SUCCESS) continuation.resume(Unit)
+                    else continuation.resumeWithException(DataTransmissionException("Transmission status is $status."))
+                }
+            }
         }
     }
 }

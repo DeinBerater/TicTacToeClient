@@ -6,6 +6,7 @@ import com.garmin.android.connectiq.ConnectIQ
 import com.garmin.android.connectiq.IQApp
 import com.garmin.android.connectiq.IQDevice
 import de.deinberater.tictactoe.garmincommunication.exceptions.IQInitializeException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -28,6 +29,7 @@ class IQCommunicator(private val context: Context) {
     @Throws(IQInitializeException::class)
     suspend fun initializeCommunicator(
         applicationId: String,
+        scope: CoroutineScope,
         onSdkShutDown: () -> Unit
     ) {
         this@IQCommunicator.connectIQInstance = ConnectIQ.getInstance(context, connectType)
@@ -53,7 +55,7 @@ class IQCommunicator(private val context: Context) {
 
                     val receiveChannel = Channel<Any>()
                     val thisCommunicator =
-                        IQAppCommunicator(receiveChannel, connectIQInstance, app, it)
+                        IQAppCommunicator(receiveChannel, connectIQInstance, app, it, scope)
 
 
                     iqAppCommunicators.add(
@@ -61,6 +63,7 @@ class IQCommunicator(private val context: Context) {
                     )
                     registerDeviceForEvents(it)
 
+                    println("registering for app events.")
                     // Register to receive messages from the application
                     connectIQInstance.registerForAppEvents(it, app) { _, _, messageData, status ->
                         if (status != ConnectIQ.IQMessageStatus.SUCCESS) {
@@ -151,6 +154,9 @@ class IQCommunicator(private val context: Context) {
 
     fun closeCommunicator() {
         try {
+            iqAppCommunicators.forEach {
+                it.sendingJob?.cancel() // Cancel all sending jobs / active queues to avoid unnecessary memory usage.
+            }
             connectIQInstance.shutdown(context)
         } catch (illegalStateException: IllegalStateException) {
             // In this case, the sdk is usually shut down already, thus it can be ignored.
