@@ -1,8 +1,12 @@
 import communication.ByteBuilder
 import communication.MockCommunicator
 import communication.createCommunicator
+import game.FieldCoordinate
 import game.Game
 import game.TicTacToeSymbol
+import game.exceptions.FieldAlreadyOccupiedException
+import game.exceptions.GameNotActiveException
+import game.exceptions.NotOnTurnException
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -414,6 +418,20 @@ class PlayerTest {
     }
 
     @Test
+    fun submitBadGameCode2() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        // Create player
+        val sut = Player(this)
+
+        assertFailsWith(IllegalArgumentException::class) {
+            sut.submitGameCode("ABCD")
+        }
+
+    }
+
+    @Test
     fun resetBoard() = runTest {
         val mockCommunicator = MockCommunicator()
         every { createCommunicator() } returns mockCommunicator
@@ -468,6 +486,149 @@ class PlayerTest {
 
         val haveDataSent = mockCommunicator.lastBytesSent?.toList()
         assertEquals(wantDataSent, haveDataSent)
+    }
+
+    @Test
+    fun fullGameTest() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        // Create player
+        val player = Player(this)
+
+        delay(1000L) // Delay to make sure the communicator is initialized.
+
+
+        // Empty game (with opponent, active, on turn and symbol x)
+        val bytes = byteArrayOf(0b10011110.toByte(), 0)
+
+        // Send Packet
+        mockCommunicator.bytesIncoming.send(bytes)
+
+        // Receive Packet
+        assertNull(player.updateChannel.receive()) // Game update successful
+        assertNull(player.game.winner())
+
+        player.makeMove(1, 1) // x in middle
+        assertNull(player.updateChannel.receive()) // Game update successful
+        assertNull(player.game.winner())
+
+        mockCommunicator.bytesIncoming.send(byteArrayOf(0b01000000)) // o in top-left corner
+        assertNull(player.updateChannel.receive()) // Game update successful
+        assertNull(player.game.winner())
+
+        player.makeMove(1, 0) // x in top
+        assertNull(player.updateChannel.receive()) // Game update successful
+        assertEquals(
+            byteArrayOf(0b01000010).toList(),
+            mockCommunicator.lastBytesSent?.toList()
+        ) // Sent
+        assertNull(player.game.winner())
+
+        mockCommunicator.bytesIncoming.send(byteArrayOf(0b01000110)) // o on left side
+        assertNull(player.updateChannel.receive()) // Game update successful
+        assertNull(player.game.winner())
+
+        player.makeMove(1, 2) // x in bottom
+        assertNull(player.updateChannel.receive()) // Game update successful
+        assertEquals(
+            byteArrayOf(0b01001110).toList(),
+            mockCommunicator.lastBytesSent?.toList()
+        ) // Sent
+
+        val winnerWant = listOf(FieldCoordinate(1, 0), FieldCoordinate(1, 1), FieldCoordinate(1, 2))
+        val winner = player.game.winner()
+
+        assertEquals(winnerWant, winner)
+
+        assertFalse(player.game.gameActive)
+        assertFalse(player.game.boardFull())
+        assertTrue(player.game.onTurn)
+    }
+
+    @Test
+    fun gameInvalidMove1() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        // Create player
+        val player = Player(this)
+
+        delay(1000L) // Delay to make sure the communicator is initialized.
+
+
+        // Empty game (with opponent, active, NOT on turn and symbol x)
+        val bytes = byteArrayOf(0b10010110.toByte(), 0)
+
+        // Send Packet
+        mockCommunicator.bytesIncoming.send(bytes)
+
+        // Receive Packet
+        assertNull(player.updateChannel.receive()) // Game update successful
+
+        assertFailsWith(NotOnTurnException::class) {
+            player.makeMove(1, 1) // x in middle
+        }
+
+    }
+
+    @Test
+    fun gameInvalidMove2() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        // Create player
+        val player = Player(this)
+
+        delay(1000L) // Delay to make sure the communicator is initialized.
+
+
+        // Empty game (with opponent, active, on turn and symbol x)
+        val bytes = byteArrayOf(0b10011110.toByte(), 0)
+
+        // Send Packet
+        mockCommunicator.bytesIncoming.send(bytes)
+
+        // Receive Packet
+        assertNull(player.updateChannel.receive()) // Game update successful
+        assertNull(player.game.winner())
+
+        player.makeMove(1, 1) // x in middle
+        assertNull(player.updateChannel.receive()) // Game update successful
+
+        mockCommunicator.bytesIncoming.send(byteArrayOf(0b01000000)) // o in top-left corner
+        assertNull(player.updateChannel.receive()) // Game update successful
+
+        assertFailsWith(FieldAlreadyOccupiedException::class) {
+            player.makeMove(1, 1) // x in middle
+        }
+
+    }
+
+    @Test
+    fun gameInvalidMove3() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        // Create player
+        val player = Player(this)
+
+        delay(1000L) // Delay to make sure the communicator is initialized.
+
+
+        // Empty game (with NO opponent, NOT active, on turn and symbol x)
+        val bytes = byteArrayOf(0b10011000.toByte(), 0)
+
+        // Send Packet
+        mockCommunicator.bytesIncoming.send(bytes)
+
+        // Receive Packet
+        assertNull(player.updateChannel.receive()) // Game update successful
+
+        assertFailsWith(GameNotActiveException::class) {
+            player.makeMove(1, 1) // x in middle
+        }
+
     }
 
 }

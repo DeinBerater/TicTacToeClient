@@ -52,6 +52,8 @@ class GarminGame(
                     val fieldCoordinate = FieldCoordinate(intSentFromDevice - 2)
                     try {
                         player.makeMove(fieldCoordinate.x, fieldCoordinate.y)
+                    } catch (e: WebSocketNotConnectedException) {
+                        garminCommunicator.transmitData("There is no connection.")
                     } catch (e: Exception) {
                         transmitCurrentGame()
                     }
