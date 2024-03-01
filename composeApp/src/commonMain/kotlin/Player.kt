@@ -5,6 +5,7 @@ import game.Game
 import game.TicTacToeSymbol
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -27,6 +28,7 @@ class Player(
         // Close connection automatically after 5 hours. This is done to prevent infinitely long connections.
         closeConnection()
     }
+    private lateinit var listeningJob: Job
 
     init {
         connectWithWebSocket()
@@ -45,7 +47,7 @@ class Player(
             }
         }
         closingConnectionJob.start()
-        scope.launch {
+        listeningJob = scope.launch {
             listenToIncomingBytes()
         }
     }
@@ -60,6 +62,7 @@ class Player(
     suspend fun closeConnection() {
         println("Closing connection...")
         communicator.closeWebSocket()
+        listeningJob.cancel()
         communicatorClosedPurposely = true
     }
 

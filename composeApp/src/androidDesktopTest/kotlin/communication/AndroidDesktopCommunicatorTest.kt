@@ -1,6 +1,7 @@
 package communication
 
 import io.ktor.client.engine.cio.CIO
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -16,25 +17,32 @@ class AndroidDesktopCommunicatorTest {
         assertEquals(want, have)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun doAsynchronouslyTest() {
-        runBlocking {
-            var string = ""
+    fun doAsynchronouslyTest() = runBlocking {
+//        val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+//        Dispatchers.setMain(testDispatcher)
 
-            string += "a"
+        var string = ""
 
-            doAsynchronously {
-                string += "b"
-            }
+        string += "a"
 
-            string += "c"
-
-            delay(1000L)
-
-            val want = "acb"
-            val have = string
-
-            assertEquals(want, have)
+        doAsynchronously {
+            delay(100L)
+            string += "b"
         }
+
+        string += "c"
+
+        delay(300L)
+
+
+        val want = "acb"
+        val have = string
+
+        assertEquals(want, have)
+
+//        Dispatchers.resetMain()
+
     }
 }
