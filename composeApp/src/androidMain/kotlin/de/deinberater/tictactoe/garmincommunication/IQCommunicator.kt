@@ -8,13 +8,11 @@ import com.garmin.android.connectiq.IQDevice
 import com.garmin.android.connectiq.exception.InvalidStateException
 import de.deinberater.tictactoe.garmincommunication.exceptions.IQInitializeException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 class IQCommunicator(private val context: Context) {
     private val connectType = ConnectIQ.IQConnectType.WIRELESS // TETHERED
@@ -54,10 +52,7 @@ class IQCommunicator(private val context: Context) {
                         return@launch
                     }
 
-                    val receiveChannel = Channel<Any>()
-                    val thisCommunicator =
-                        IQAppCommunicator(receiveChannel, connectIQInstance, app, it, scope)
-
+                    val thisCommunicator = IQAppCommunicator(connectIQInstance, app, it, scope)
 
                     iqAppCommunicators.add(
                         thisCommunicator
@@ -74,9 +69,7 @@ class IQCommunicator(private val context: Context) {
                             return@registerForAppEvents
                         }
 
-                        runBlocking {
-                            receiveChannel.send(messageData)
-                        }
+                        thisCommunicator.dataReceived(messageData)
                     }
                 }
             }
@@ -93,7 +86,7 @@ class IQCommunicator(private val context: Context) {
 
 
     private suspend fun initializeConnectIQ(onSdkShutDownParam: () -> Unit) =
-        suspendCoroutine { continuation ->
+        suspendCancellableCoroutine { continuation ->
             connectIQInstance.initialize(context, false, object : ConnectIQ.ConnectIQListener {
 
                 // Called when the SDK has been successfully initialized
@@ -120,7 +113,7 @@ class IQCommunicator(private val context: Context) {
         }
 
     private suspend fun receiveIQApp(device: IQDevice, applicationId: String) =
-        suspendCoroutine { continuation ->
+        suspendCancellableCoroutine { continuation ->
 
             val iQApplicationInfoListener = object : ConnectIQ.IQApplicationInfoListener {
                 override fun onApplicationInfoReceived(iqApp: IQApp) {

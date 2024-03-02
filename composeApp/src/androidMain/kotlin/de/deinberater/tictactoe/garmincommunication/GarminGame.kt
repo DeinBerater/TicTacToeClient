@@ -5,6 +5,8 @@ import communication.ByteBuilder
 import communication.WebSocketNotConnectedException
 import game.FieldCoordinate
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** This class manages a game for each device.
@@ -15,23 +17,36 @@ class GarminGame(
     private val scope: CoroutineScope
 ) {
     private lateinit var player: Player
+    private var gameUpdateListeningJob: Job? = null
 
-    /** This method is blocking, thus it shall be launched in a coroutine scope.
-     * */
-    suspend fun listenToGarminDevice() {
-        for (garminData in garminCommunicator.appReceiveChannel) {
-            println(garminData.toString())
+    init {
+        listenToGarminDevice()
+
+        scope.launch {
+            delay(3 * 60 * 60 * 1000L)
+            // Cancel the game automatically after 3 hours to save the phones resources.
+            cancelGame()
+        }
+    }
+
+    suspend fun cancelGame() {
+        player.closeConnection()
+        gameUpdateListeningJob?.cancel()
+    }
+
+    private fun listenToGarminDevice() {
+        garminCommunicator.setOnAppReceive { garminData ->
             // The code in here should be non-blocking.
-            if (garminData !is List<*>) continue
-            if (garminData.size != 1) continue
-            val intSentFromDevice = garminData.first() as? Int ?: continue
+            if (garminData !is List<*>) return@setOnAppReceive
+            if (garminData.size != 1) return@setOnAppReceive
+            val intSentFromDevice = garminData.first() as? Int ?: return@setOnAppReceive
             // Data is now an integer.
 
             println("Data received: $garminData")
             if (!this@GarminGame::player.isInitialized) {
                 player = Player(scope)
-                scope.launch { listenToGameUpdates() }
-                continue
+                gameUpdateListeningJob = scope.launch { listenToGameUpdates() }
+                return@setOnAppReceive
             }
 
             when (intSentFromDevice) {
@@ -83,8 +98,8 @@ class GarminGame(
         if (gameWinner != null) {
             var currentNum = 0
             gameWinner.forEach {
-                currentNum += it.toIndex()
                 currentNum *= 10
+                currentNum += it.toIndex()
             }
             dataToSend += currentNum
         } else dataToSend += null

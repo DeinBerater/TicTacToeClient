@@ -37,7 +37,7 @@ class PlayerTest {
     }
 
     @Test
-    fun mockCommunicator(): Unit = runTest {
+    fun mockCommunicator() = runTest {
         val mockCommunicator = MockCommunicator()
         every { createCommunicator() } returns mockCommunicator
 
@@ -49,6 +49,9 @@ class PlayerTest {
             changed = true
         }
         assertFalse(changed)
+
+        delay(1000L)
+        assertTrue(changed)
     }
 
     @Test

@@ -16,17 +16,27 @@ import kotlin.coroutines.resumeWithException
 
 
 class IQAppCommunicator(
-    val appReceiveChannel: Channel<Any>, private val transmittingInstance: ConnectIQ,
-    private val iqApp: IQApp,
+    private val transmittingInstance: ConnectIQ, private val iqApp: IQApp,
     private val device: IQDevice,
     private val sendingQueueScope: CoroutineScope
 ) {
     private val queue = Channel<Any>()
+    private var onAppReceive: ((garminData: Any) -> Unit)? = null
     var sendingJob: Job? = null
         private set
 
     init {
         continueQueue() // Also starts the queue
+    }
+
+    fun setOnAppReceive(block: (garminData: Any) -> Unit) {
+        onAppReceive = block
+    }
+
+    /** Called when the garmin device sent data.
+     * */
+    fun dataReceived(garminData: Any) {
+        onAppReceive?.let { it(garminData) }
     }
 
     private suspend fun runQueue() {

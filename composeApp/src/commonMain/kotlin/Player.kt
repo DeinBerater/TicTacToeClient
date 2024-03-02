@@ -73,6 +73,7 @@ class Player(
             println("Restarting... Connection closed, now reconnecting...")
             communicator = createCommunicator()
             connectWithWebSocket()
+            communicatorClosedPurposely = false // Reset value
             println("Connection restarted. Creating new game...")
             game = Game()
         }

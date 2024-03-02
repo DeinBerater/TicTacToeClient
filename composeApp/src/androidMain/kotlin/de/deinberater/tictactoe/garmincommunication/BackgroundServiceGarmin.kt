@@ -22,6 +22,7 @@ class BackgroundServiceGarmin : Service() {
     private val scope = CoroutineScope(Dispatchers.Unconfined + job)
 
     private val iqCommunicator = IQCommunicator(this@BackgroundServiceGarmin)
+    private var games = mutableListOf<GarminGame>()
 
     companion object {
         private const val NOTIFICATION_ID = 1
@@ -71,10 +72,8 @@ class BackgroundServiceGarmin : Service() {
                 val deviceCommunicators = iqCommunicator.iqAppCommunicators
 
                 deviceCommunicators.forEach {
-                    val game = GarminGame(it, scope)
-                    scope.launch {
-                        game.listenToGarminDevice()
-                    }
+                    // Create a garmin game, the rest is handled there.
+                    games += GarminGame(it, scope)
                 }
 
             } catch (exception: IQInitializeException) {
@@ -120,6 +119,12 @@ class BackgroundServiceGarmin : Service() {
 
         // Shutdown the ConnectIQ instance to ensure it unregisters the receiver.
         iqCommunicator.closeCommunicator()
+
+        games.forEach {
+            scope.launch {
+                it.cancelGame()
+            }
+        }
 
         job.cancel()
         super.onDestroy()

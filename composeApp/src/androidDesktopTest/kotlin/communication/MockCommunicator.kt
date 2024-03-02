@@ -3,7 +3,9 @@ package communication
 import kotlinx.coroutines.delay
 
 class MockCommunicator : BaseCommunicator() {
-    private var webSocketConnected = false
+    var webSocketConnected = false
+        private set
+
     var pleaseThrowAnExceptionOnConnection = false
     var lastBytesSent: ByteArray? = null
     override suspend fun connectWithWebsocket() {
