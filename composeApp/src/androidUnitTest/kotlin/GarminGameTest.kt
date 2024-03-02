@@ -224,4 +224,65 @@ class GarminGameTest {
 
         assertTrue(dataTransmitted.isNotEmpty())
     }
+
+    @Test
+    fun newGameTwice() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        val garminAppCommunicator = mockk<IQAppCommunicator>()
+        every { garminAppCommunicator.transmitData(any()) } just runs
+
+        val onDataReceivedSlot = slot<(Any) -> Unit>()
+        every { garminAppCommunicator.setOnAppReceive(capture(onDataReceivedSlot)) } just runs
+
+        GarminGame(garminAppCommunicator, this)
+
+
+        onDataReceivedSlot.captured(listOf(0)) // Player should be created and websocket connection established.
+        assertFalse(mockCommunicator.webSocketConnected)
+
+        delay(1000L)
+        assertTrue(mockCommunicator.webSocketConnected)
+
+
+        delay(4 * 60 * 60 * 1000L) // Wait a long time, the game should be stopped now.
+
+        onDataReceivedSlot.captured(listOf(0)) // A new player should be created and a new websocket connection established.
+        assertFalse(mockCommunicator.webSocketConnected)
+
+        delay(1000L)
+        assertTrue(mockCommunicator.webSocketConnected)
+    }
+
+    @Test
+    fun newGameTwice2() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        val garminAppCommunicator = mockk<IQAppCommunicator>()
+        every { garminAppCommunicator.transmitData(any()) } just runs
+
+        val onDataReceivedSlot = slot<(Any) -> Unit>()
+        every { garminAppCommunicator.setOnAppReceive(capture(onDataReceivedSlot)) } just runs
+
+        GarminGame(garminAppCommunicator, this)
+
+
+        onDataReceivedSlot.captured(listOf(0)) // Player should be created and websocket connection established.
+        assertFalse(mockCommunicator.webSocketConnected)
+
+        delay(1000L)
+        assertTrue(mockCommunicator.webSocketConnected)
+
+
+        delay(10 * 60 * 60 * 1000L) // Wait a really long time, the game should definitely be stopped now.
+
+        onDataReceivedSlot.captured(listOf(0)) // A new player should be created and a new websocket connection established.
+        assertFalse(mockCommunicator.webSocketConnected)
+
+        delay(1000L)
+        assertTrue(mockCommunicator.webSocketConnected)
+    }
+
 }

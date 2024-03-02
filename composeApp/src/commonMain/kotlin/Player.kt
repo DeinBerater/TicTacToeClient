@@ -60,7 +60,7 @@ class Player(
     }
 
     suspend fun closeConnection() {
-        println("Closing connection...")
+        println("Player ${this@Player}: Closing connection...")
         communicator.closeWebSocket()
         listeningJob.cancel()
         communicatorClosedPurposely = true

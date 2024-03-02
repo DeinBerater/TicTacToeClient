@@ -16,22 +16,20 @@ class GarminGame(
     private val garminCommunicator: IQAppCommunicator,
     private val scope: CoroutineScope
 ) {
-    private lateinit var player: Player
+    private var player: Player? = null
     private var gameUpdateListeningJob: Job? = null
 
     init {
         listenToGarminDevice()
-
-        scope.launch {
-            delay(3 * 60 * 60 * 1000L)
-            // Cancel the game automatically after 3 hours to save the phones resources.
-            cancelGame()
-        }
     }
 
     suspend fun cancelGame() {
-        player.closeConnection()
+        println("Cancelling garmin game...")
+        player?.closeConnection()
         gameUpdateListeningJob?.cancel()
+
+        // Reset player to be able to start another game at a later time.
+        player = null
     }
 
     private fun listenToGarminDevice() {
@@ -43,22 +41,32 @@ class GarminGame(
             // Data is now an integer.
 
             println("Data received: $garminData")
-            if (!this@GarminGame::player.isInitialized) {
+            if (player == null) {
                 player = Player(scope)
+
+                // Start listening job
                 gameUpdateListeningJob = scope.launch { listenToGameUpdates() }
+
+                // Start timeout to cancel listening job
+                scope.launch {
+                    delay(2 * 60 * 60 * 1000L)
+                    // Cancel the game automatically after 2 hours to save the phones resources.
+                    cancelGame()
+                }
+
                 return@setOnAppReceive
             }
 
             when (intSentFromDevice) {
                 0 -> transmitCurrentGame()
                 1 -> try {
-                    player.toggleSymbol()
+                    player?.toggleSymbol()
                 } catch (e: WebSocketNotConnectedException) {
                     garminCommunicator.transmitData("There is no connection.")
                 }
 
                 2 -> try {
-                    player.resetBoard()
+                    player?.resetBoard()
                 } catch (e: WebSocketNotConnectedException) {
                     garminCommunicator.transmitData("There is no connection.")
                 }
@@ -66,7 +74,7 @@ class GarminGame(
                 else -> {
                     val fieldCoordinate = FieldCoordinate(intSentFromDevice - 2)
                     try {
-                        player.makeMove(fieldCoordinate.x, fieldCoordinate.y)
+                        player?.makeMove(fieldCoordinate.x, fieldCoordinate.y)
                     } catch (e: WebSocketNotConnectedException) {
                         garminCommunicator.transmitData("There is no connection.")
                     } catch (e: Exception) {
@@ -78,7 +86,8 @@ class GarminGame(
     }
 
     private suspend fun listenToGameUpdates() {
-        for (gameUpdate in player.updateChannel) {
+        if (player == null) return
+        for (gameUpdate in player!!.updateChannel) {
             if (gameUpdate == null) {
                 transmitCurrentGame()
                 return
@@ -88,7 +97,7 @@ class GarminGame(
 
     private fun transmitCurrentGame() {
         println("Transmitting the current game info to a garmin device...")
-        val game = player.game
+        val game = player?.game ?: return
 
         val dataToSend = mutableListOf<Any?>()
 
