@@ -53,14 +53,14 @@ class Player(
     }
 
     private fun updateUi() {
-        println("Updating ui...")
+        println("${this}: Updating ui...")
         scope.launch {
             updateChannel.send(null)
         }
     }
 
     suspend fun closeConnection() {
-        println("Player ${this@Player}: Closing connection...")
+        println("${this@Player}: Closing connection...")
         communicator.closeWebSocket()
         listeningJob.cancel()
         communicatorClosedPurposely = true

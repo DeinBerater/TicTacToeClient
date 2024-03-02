@@ -87,10 +87,11 @@ class GarminGame(
 
     private suspend fun listenToGameUpdates() {
         if (player == null) return
-        for (gameUpdate in player!!.updateChannel) {
+        val updateChannel = player!!.updateChannel
+        for (gameUpdate in updateChannel) {
             if (gameUpdate == null) {
                 transmitCurrentGame()
-                return
+                continue
             } else garminCommunicator.transmitData(gameUpdate)
         }
     }
@@ -99,21 +100,25 @@ class GarminGame(
         println("Transmitting the current game info to a garmin device...")
         val game = player?.game ?: return
 
-        val dataToSend = mutableListOf<Any?>()
 
-        dataToSend += game.gameCode
+        val byteBuilder = ByteBuilder()
+
+        val gameCode = game.gameCode
+        if (gameCode != null) {
+            byteBuilder.addBoolean(true)
+            gameCode.forEach {
+                byteBuilder.addInt(it - 'A', 5)
+            }
+        } else byteBuilder.addBoolean(false)
 
         val gameWinner = game.winner()
         if (gameWinner != null) {
-            var currentNum = 0
+            byteBuilder.addBoolean(true)
             gameWinner.forEach {
-                currentNum *= 10
-                currentNum += it.toIndex()
+                byteBuilder.addInt(it.toIndex(), 4)
             }
-            dataToSend += currentNum
-        } else dataToSend += null
+        } else byteBuilder.addBoolean(false)
 
-        val byteBuilder = ByteBuilder()
         byteBuilder.addBoolean(game.onTurn)
         byteBuilder.addBoolean(game.hasOpponent)
         byteBuilder.addBoolean(game.boardFull())
@@ -133,10 +138,7 @@ class GarminGame(
             byteBuilder.addBoolean(true).addInt(symbolOnField.ordinal, 1)
         }
 
-        dataToSend += byteBuilder.getBytes()
-
-
-        // Add tp transmission queue
-        garminCommunicator.transmitData(dataToSend)
+        // Add to transmission queue
+        garminCommunicator.transmitData(byteBuilder.getBytes())
     }
 }

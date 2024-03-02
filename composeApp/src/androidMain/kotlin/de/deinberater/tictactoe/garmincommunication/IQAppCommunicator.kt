@@ -53,8 +53,9 @@ class IQAppCommunicator(
     }
 
     fun transmitData(data: Any) {
+        val dataToTransmit = if (data is ByteArray) data.map { it.toInt() } else data
         sendingQueueScope.launch {
-            queue.send(data)
+            queue.send(dataToTransmit)
         }
     }
 

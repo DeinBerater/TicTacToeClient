@@ -58,8 +58,7 @@ class BackgroundServiceGarmin : Service() {
         notificationManager.createNotificationChannel(mChannel)
 
 
-        val applicationId =
-            "" // ToDo: Create application and insert id here
+        val applicationId = "9adc2663-33b9-4c0c-8746-aa3a083b22dd"
 
 
         scope.launch {

@@ -16,7 +16,6 @@ import org.junit.Before
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class GarminGameTest {
@@ -59,7 +58,7 @@ class GarminGameTest {
         every { createCommunicator() } returns mockCommunicator
 
         val garminAppCommunicator = mockk<IQAppCommunicator>()
-        val lastDataTransmittedToGarminDevice = slot<List<Any>>()
+        val lastDataTransmittedToGarminDevice = slot<Any>()
         every { garminAppCommunicator.transmitData(capture(lastDataTransmittedToGarminDevice)) } just runs
 
         val onDataReceivedSlot = slot<(Any) -> Unit>()
@@ -81,12 +80,11 @@ class GarminGameTest {
 
         val dataTransmitted = lastDataTransmittedToGarminDevice.captured
 
-        assertEquals(wantGameCode, dataTransmitted[0])
-        assertNull(dataTransmitted[1]) // No winner
-
         // Symbol unknown (2), field empty, ...
-        val wantGameInfo = byteArrayOf(0b10001000.toByte(), 0b00000000).toList()
-        assertEquals(wantGameInfo, (dataTransmitted[2] as ByteArray).toList())
+        val wantGameData =
+            byteArrayOf(0b10000000.toByte(), 0b00000000, 0b00000000, 0b00010001, 0, 0).toList()
+
+        assertEquals(wantGameData, (dataTransmitted as ByteArray).toList())
     }
 
     @Test
@@ -95,7 +93,7 @@ class GarminGameTest {
         every { createCommunicator() } returns mockCommunicator
 
         val garminAppCommunicator = mockk<IQAppCommunicator>()
-        val lastDataTransmittedToGarminDevice = slot<List<Any>>()
+        val lastDataTransmittedToGarminDevice = slot<Any>()
         every { garminAppCommunicator.transmitData(capture(lastDataTransmittedToGarminDevice)) } just runs
 
         val onDataReceivedSlot = slot<(Any) -> Unit>()
@@ -128,7 +126,7 @@ class GarminGameTest {
         every { createCommunicator() } returns mockCommunicator
 
         val garminAppCommunicator = mockk<IQAppCommunicator>()
-        val lastDataTransmittedToGarminDevice = slot<List<Any>>()
+        val lastDataTransmittedToGarminDevice = slot<Any>()
         every { garminAppCommunicator.transmitData(capture(lastDataTransmittedToGarminDevice)) } just runs
 
         val onDataReceivedSlot = slot<(Any) -> Unit>()
@@ -161,7 +159,7 @@ class GarminGameTest {
         every { createCommunicator() } returns mockCommunicator
 
         val garminAppCommunicator = mockk<IQAppCommunicator>()
-        val lastDataTransmittedToGarminDevice = slot<List<Any>>()
+        val lastDataTransmittedToGarminDevice = slot<Any>()
         every { garminAppCommunicator.transmitData(capture(lastDataTransmittedToGarminDevice)) } just runs
 
         val onDataReceivedSlot = slot<(Any) -> Unit>()
@@ -182,17 +180,11 @@ class GarminGameTest {
 
         val dataTransmitted = lastDataTransmittedToGarminDevice.captured
 
-        assertNull(dataTransmitted[0]) // No game code (normally unrealistic)
-
-        val winnerWant = 147
-        val winner = dataTransmitted[1]
-
-        assertEquals(winnerWant, winner)
-
+        // No game code (normally unrealistic)
         // Symbol o, ...
         val wantGameInfo =
-            byteArrayOf(0b11000001.toByte(), 0b01101011.toByte(), 0b01000000.toByte()).toList()
-        assertEquals(wantGameInfo, (dataTransmitted[2] as ByteArray).toList())
+            byteArrayOf(0b01000101, 0b00011111, 0b00000101, 0b10101101.toByte(), 0).toList()
+        assertEquals(wantGameInfo, (dataTransmitted as ByteArray).toList())
     }
 
     @Test
