@@ -57,31 +57,29 @@ class GarminGame(
                 return@setOnAppReceive
             }
 
-            when (intSentFromDevice) {
-                0 -> transmitCurrentGame()
-                1 -> try {
-                    player?.toggleSymbol()
-                } catch (e: WebSocketNotConnectedException) {
-                    garminCommunicator.transmitData("There is no connection.")
-                }
+            try {
+                when (intSentFromDevice) {
+                    0 -> transmitCurrentGame()
+                    1 -> player?.toggleSymbol()
+                    2 -> player?.resetBoard()
 
-                2 -> try {
-                    player?.resetBoard()
-                } catch (e: WebSocketNotConnectedException) {
-                    garminCommunicator.transmitData("There is no connection.")
-                }
-
-                else -> {
-                    val fieldCoordinate = FieldCoordinate(intSentFromDevice - 2)
-                    try {
-                        player?.makeMove(fieldCoordinate.x, fieldCoordinate.y)
-                    } catch (e: WebSocketNotConnectedException) {
-                        garminCommunicator.transmitData("There is no connection.")
-                    } catch (e: Exception) {
-                        transmitCurrentGame()
+                    else -> {
+                        val fieldCoordinate = FieldCoordinate(intSentFromDevice - 2)
+                        try {
+                            player?.makeMove(fieldCoordinate.x, fieldCoordinate.y)
+                        } catch (e: Throwable) {
+                            if (e is WebSocketNotConnectedException) throw e
+                            transmitCurrentGame()
+                        }
                     }
                 }
+            } catch (e: WebSocketNotConnectedException) {
+                garminCommunicator.transmitData("There is no connection. Retrying...")
+
+                // Restart the connection to retry
+                player?.restartConnection()
             }
+
         }
     }
 
