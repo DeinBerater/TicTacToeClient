@@ -81,6 +81,7 @@ class IQAppCommunicator(
         withTimeout(5000L) {
             suspendCancellableCoroutine { continuation ->
                 transmittingInstance.sendMessage(device, iqApp, data) { _, _, status ->
+                    if (!continuation.isActive) return@sendMessage // Return to avoid possible bugs/crashes
                     if (status == ConnectIQ.IQMessageStatus.SUCCESS) continuation.resume(Unit)
                     else continuation.resumeWithException(DataTransmissionException("Transmission status is $status."))
                 }

@@ -29,7 +29,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Communicates with the Garmin Connect App via Broadcast messages." />
+                android:value="Communicates with the Garmin Connect App via Broadcast messages and connects with the TicTacToe server with a WebSocket." />
         </service>
     </application>
 

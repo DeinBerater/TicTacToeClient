@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import de.deinberater.tictactoe.R
 import de.deinberater.tictactoe.garmincommunication.exceptions.IQInitializeException
 import kotlinx.coroutines.CoroutineScope
@@ -101,11 +102,12 @@ class BackgroundServiceGarmin : Service() {
                     NOTIFICATION_CHANNEL_ID
                 )
                     .setOngoing(true)
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setSmallIcon(R.drawable.icon_notification)
+                    .setColor(ContextCompat.getColor(this, R.color.ic_launcher_background))
                     .setContentTitle("TicTacToe service active.")
                     .setContentText("You can now play TicTacToe from your Garmin device.")
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                    .addAction(R.drawable.ic_launcher_foreground, "Stop", pStopSelf)
+                    .addAction(R.drawable.icon_notification, "Stop", pStopSelf)
                     .build()
             )
         } catch (e: Exception) {

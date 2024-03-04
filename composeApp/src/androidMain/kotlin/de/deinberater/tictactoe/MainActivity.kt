@@ -9,12 +9,13 @@ import androidx.activity.compose.setContent
 import de.deinberater.tictactoe.garmincommunication.BackgroundServiceGarmin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 private val scope = CoroutineScope(Dispatchers.Unconfined)
 
 
 class MainActivity : ComponentActivity() {
-    private val player = Player(CoroutineScope(Dispatchers.Default))
+    private val player = Player(scope)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,5 +23,12 @@ class MainActivity : ComponentActivity() {
             App(player)
         }
         startService(Intent(this, BackgroundServiceGarmin::class.java))
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.launch {
+            player.closeConnection()
+        }
     }
 }
