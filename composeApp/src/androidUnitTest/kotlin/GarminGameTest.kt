@@ -73,7 +73,6 @@ class GarminGameTest {
 
         // Server sends game code 'AAAAA'
         val welcomeBytes = byteArrayOf(0b00000000, 0b00000000, 0b00000000, 0b00000000)
-        val wantGameCode = "AAAAA"
         mockCommunicator.bytesIncoming.send(welcomeBytes)
 
         delay(100L)

@@ -166,6 +166,12 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "de.deinberater.tictactoe"
             packageVersion = "1.0.0"
+            windows {
+                iconFile.set(project.file("/src/desktopMain/resources/icon_windows.ico"))
+            }
+            linux {
+                iconFile.set(project.file("/src/desktopMain/resources/icon_linux.png"))
+            }
         }
     }
 }
