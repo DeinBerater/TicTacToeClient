@@ -276,4 +276,152 @@ class GarminGameTest {
         assertTrue(mockCommunicator.webSocketConnected)
     }
 
+    @Test
+    fun gameReceivedWithCode() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        val garminAppCommunicator = mockk<IQAppCommunicator>()
+        val lastDataTransmittedToGarminDevice = slot<Any>()
+        every { garminAppCommunicator.transmitData(capture(lastDataTransmittedToGarminDevice)) } just runs
+
+        val onDataReceivedSlot = slot<(Any) -> Unit>()
+        every { garminAppCommunicator.setOnAppReceive(capture(onDataReceivedSlot)) } just runs
+
+
+        GarminGame(garminAppCommunicator, this)
+
+
+        onDataReceivedSlot.captured(listOf(0)) // Player should be created and websocket connection established.
+
+        delay(1000L)
+
+        // Server sends game code 'AAAAA'
+        val welcomeBytes = byteArrayOf(0b00000000, 0b00000000, 0b00000000, 0b00000000)
+        mockCommunicator.bytesIncoming.send(welcomeBytes)
+
+        delay(100L)
+
+        // Server sends game information
+        val gameInfoBytes = byteArrayOf(-116, -75, -96)
+        mockCommunicator.bytesIncoming.send(gameInfoBytes)
+
+        delay(1000L)
+        val dataTransmitted = lastDataTransmittedToGarminDevice.captured
+
+        // Symbol o, ... (with game code "AAAAA")
+        val wantGameInfo =
+            byteArrayOf(
+                0b10000000.toByte(),
+                0,
+                0,
+                0b00100010,
+                0b10001111.toByte(),
+                0b10000010.toByte(),
+                0b11010110.toByte(),
+                0b10000000.toByte()
+            ).toList()
+
+        assertEquals(wantGameInfo, (dataTransmitted as ByteArray).toList())
+    }
+
+    @Test
+    fun gameReceivedWithCode2() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        val garminAppCommunicator = mockk<IQAppCommunicator>()
+        val lastDataTransmittedToGarminDevice = slot<Any>()
+        every { garminAppCommunicator.transmitData(capture(lastDataTransmittedToGarminDevice)) } just runs
+
+        val onDataReceivedSlot = slot<(Any) -> Unit>()
+        every { garminAppCommunicator.setOnAppReceive(capture(onDataReceivedSlot)) } just runs
+
+
+        GarminGame(garminAppCommunicator, this)
+
+
+        onDataReceivedSlot.captured(listOf(0)) // Player should be created and websocket connection established.
+
+        delay(1000L)
+
+        // Server sends game code 'AAAAA'
+        val welcomeBytes = byteArrayOf(0b00000000, 0b00000000, 0b00000000, 0b00000000)
+        mockCommunicator.bytesIncoming.send(welcomeBytes)
+
+        delay(100L)
+
+        // Server sends game information
+        val gameInfoBytes = byteArrayOf(0b10001111.toByte(), 0b10010100.toByte(), 0)
+        mockCommunicator.bytesIncoming.send(gameInfoBytes)
+
+        delay(1000L)
+        val dataTransmitted = lastDataTransmittedToGarminDevice.captured
+
+        // Symbol o, on turn with opponent, ... (with game code "AAAAA"), no winner in game
+        val wantGameInfo =
+            byteArrayOf(
+                0b10000000.toByte(),
+                0,
+                0,
+                0b00011010,
+                0b01100101,
+                0
+            ).toList()
+
+        assertEquals(wantGameInfo, (dataTransmitted as ByteArray).toList())
+    }
+
+    @Test
+    fun makeMove() = runTest {
+        val mockCommunicator = MockCommunicator()
+        every { createCommunicator() } returns mockCommunicator
+
+        val garminAppCommunicator = mockk<IQAppCommunicator>()
+        val lastDataTransmittedToGarminDevice = slot<Any>()
+        every { garminAppCommunicator.transmitData(capture(lastDataTransmittedToGarminDevice)) } just runs
+
+        val onDataReceivedSlot = slot<(Any) -> Unit>()
+        every { garminAppCommunicator.setOnAppReceive(capture(onDataReceivedSlot)) } just runs
+
+
+        GarminGame(garminAppCommunicator, this)
+
+
+        onDataReceivedSlot.captured(listOf(0)) // Player should be created and websocket connection established.
+
+        delay(1000L)
+
+        // Server sends game code 'AAAAA'
+        val welcomeBytes = byteArrayOf(0b00000000, 0b00000000, 0b00000000, 0b00000000)
+        mockCommunicator.bytesIncoming.send(welcomeBytes)
+
+        delay(100L)
+
+        // Server sends game information
+        val gameInfoBytes = byteArrayOf(0b10001111.toByte(), 0b10010100.toByte(), 0)
+        mockCommunicator.bytesIncoming.send(gameInfoBytes)
+
+        delay(1000L)
+
+        onDataReceivedSlot.captured(listOf(9)) // The player makes a move (unrealistic)
+
+        delay(1000L)
+
+        val dataTransmitted = lastDataTransmittedToGarminDevice.captured
+
+        // Symbol o, on turn with opponent, ... (with game code "AAAAA"), no winner in game
+        val wantGameInfo =
+            byteArrayOf(
+                0b10000000.toByte(),
+                0,
+                0,
+                0b00001010,
+                0b01100101,
+                0b00100000
+            ).toList()
+
+        assertEquals(wantGameInfo, (dataTransmitted as ByteArray).toList())
+    }
+
 }
