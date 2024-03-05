@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -62,9 +61,11 @@ import game.TicTacToeSymbol
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
+import tictactoeclient.composeapp.generated.resources.Res
+import tictactoeclient.composeapp.generated.resources.content_copy
 
 
-@OptIn(ExperimentalResourceApi::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 fun App(player: Player, darkTheme: Boolean = isSystemInDarkTheme()) {
     val scope = rememberCoroutineScope()
@@ -174,7 +175,7 @@ fun App(player: Player, darkTheme: Boolean = isSystemInDarkTheme()) {
                             },
                         ) {
                             Icon(
-                                painter = painterResource("content_copy.xml"),
+                                painter = painterResource(Res.drawable.content_copy),
                                 contentDescription = "CopyIcon",
                                 tint = if (codeCopied.value) Color(0xFF2ecc71) else MaterialTheme.colors.onBackground,
                             )

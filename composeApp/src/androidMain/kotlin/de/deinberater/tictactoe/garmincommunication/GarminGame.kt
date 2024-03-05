@@ -64,7 +64,7 @@ class GarminGame(
                     2 -> player?.resetBoard()
 
                     else -> {
-                        val fieldCoordinate = FieldCoordinate(intSentFromDevice - 2)
+                        val fieldCoordinate = FieldCoordinate(intSentFromDevice - 3)
                         try {
                             player?.makeMove(fieldCoordinate.x, fieldCoordinate.y)
                         } catch (e: Throwable) {
