@@ -14,6 +14,7 @@ lifecycleViewmodelCompose = "2.7.0"
 lifecycleRuntimeCompose = "2.7.0"
 lifecycleViewmodelKtx = "2.7.0"
 mockk = "1.13.10"
+slf4jJdk14Version = "2.0.12"
 
 [libraries]
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
@@ -32,6 +33,7 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktorCli
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktorVersion" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktorVersion" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+slf4j-slf4j-jdk14 = { module = "org.slf4j:slf4j-jdk14", version.ref = "slf4jJdk14Version" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

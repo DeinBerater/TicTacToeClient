@@ -67,6 +67,7 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.slf4j.slf4j.jdk14)
         }
         androidMain.dependencies {
             implementation(libs.compose.ui.tooling.preview)
@@ -77,6 +78,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
 
+            //noinspection UseTomlInstead (toml does not work properly with this)
             implementation("com.garmin.connectiq:ciq-companion-app-sdk:2.0.3@aar")
         }
         desktopMain.dependencies {

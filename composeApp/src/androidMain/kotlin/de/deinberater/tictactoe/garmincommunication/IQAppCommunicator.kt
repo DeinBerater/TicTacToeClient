@@ -3,7 +3,7 @@ package de.deinberater.tictactoe.garmincommunication
 import com.garmin.android.connectiq.ConnectIQ
 import com.garmin.android.connectiq.IQApp
 import com.garmin.android.connectiq.IQDevice
-import de.deinberater.nigglgarminmobile.devicecommunication.exceptions.DataTransmissionException
+import de.deinberater.tictactoe.garmincommunication.exceptions.DataTransmissionException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException

@@ -1,3 +1,3 @@
-package de.deinberater.nigglgarminmobile.devicecommunication.exceptions
+package de.deinberater.tictactoe.garmincommunication.exceptions
 
 open class DataTransmissionException(message: String) : Exception(message)
