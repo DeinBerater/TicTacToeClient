@@ -218,4 +218,110 @@ class GameTest {
             sut.getSymbolByCoords(1, -1)
         }
     }
+
+    @Test
+    fun updateBoardAndGetWinners() {
+        val newSymbols =
+            listOf(null, null, TicTacToeSymbol.X, null, null, null, TicTacToeSymbol.O, null, null)
+        val sut = Game()
+        sut.updateBoard(newSymbols)
+
+        assertNull(sut.getSymbolByCoords(2, 1))
+        assertEquals(sut.getSymbolByCoords(2, 0), TicTacToeSymbol.X)
+        assertEquals(sut.getSymbolByCoords(0, 2), TicTacToeSymbol.O)
+
+        assertNull(sut.winner())
+    }
+
+    @Test
+    fun updateBoardAndGetWinners2() {
+        val newSymbols =
+            listOf(
+                null,
+                null,
+                TicTacToeSymbol.X,
+                null,
+                TicTacToeSymbol.X,
+                TicTacToeSymbol.O,
+                TicTacToeSymbol.X,
+                null,
+                TicTacToeSymbol.O
+            )
+        val sut = Game()
+
+        sut.updateBoard(newSymbols)
+
+        val want = listOf(FieldCoordinate(2, 0), FieldCoordinate(1, 1), FieldCoordinate(0, 2))
+        val have = sut.winner()
+        assertEquals(want, have)
+    }
+
+    @Test
+    fun updateBoardAndGetWinners3() {
+        val newSymbols =
+            listOf(
+                TicTacToeSymbol.O,
+                TicTacToeSymbol.O,
+                TicTacToeSymbol.O,
+                null,
+                TicTacToeSymbol.X,
+                TicTacToeSymbol.X,
+                TicTacToeSymbol.X,
+                null,
+                null
+            )
+        val sut = Game()
+
+        sut.updateBoard(newSymbols)
+
+        val want = listOf(FieldCoordinate(0, 0), FieldCoordinate(1, 0), FieldCoordinate(2, 0))
+        val have = sut.winner()
+        assertEquals(want, have)
+    }
+
+    @Test
+    fun updateBoardAndGetWinners4() {
+        val newSymbols =
+            listOf(
+                TicTacToeSymbol.O,
+                TicTacToeSymbol.X,
+                TicTacToeSymbol.X,
+                TicTacToeSymbol.O,
+                null,
+                TicTacToeSymbol.X,
+                TicTacToeSymbol.O,
+                null,
+                null
+            )
+        val sut = Game()
+
+        sut.updateBoard(newSymbols)
+
+        val want = listOf(FieldCoordinate(0, 0), FieldCoordinate(0, 1), FieldCoordinate(0, 2))
+        val have = sut.winner()
+        assertEquals(want, have)
+    }
+
+    @Test
+    fun updateBoardAndGetWinners5() {
+        val newSymbols =
+            listOf(
+                TicTacToeSymbol.X,
+                TicTacToeSymbol.O,
+                TicTacToeSymbol.O,
+                TicTacToeSymbol.O,
+                TicTacToeSymbol.X,
+                null,
+                TicTacToeSymbol.X,
+                null,
+                TicTacToeSymbol.X
+            )
+        val sut = Game()
+
+        sut.updateBoard(newSymbols)
+
+        val want = listOf(FieldCoordinate(0, 0), FieldCoordinate(1, 1), FieldCoordinate(2, 2))
+        val have = sut.winner()
+        assertEquals(want, have)
+    }
 }

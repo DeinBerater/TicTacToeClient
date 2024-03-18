@@ -40,6 +40,9 @@ abstract class BaseCommunicator {
 
     fun sendToggleSymbol() = sendEmptyPacket(OutgoingPacketType.ToggleSymbol)
 
+    /** Sends an empty packet to the server.
+     * @param type the packet type
+     * */
     private fun sendEmptyPacket(type: OutgoingPacketType) {
         sendBytes(ByteBuilder().addInt(type.ordinal, 3).getBytes())
     }

@@ -277,6 +277,7 @@ fun App(player: Player, darkTheme: Boolean = isSystemInDarkTheme()) {
                                 val x = it.x.toInt() / boxWidth
                                 val y = it.y.toInt() / boxHeight
 
+                                focusManager.clearFocus()
                                 println("Clicked on field ($x, $y).")
                                 try {
                                     // Also updates ui.
@@ -296,7 +297,6 @@ fun App(player: Player, darkTheme: Boolean = isSystemInDarkTheme()) {
                     }
 
                     if (winner != null) {
-                        // Animation
                         val firstPoint = winner!!.first()
                         val lastPoint = winner!!.last()
 
