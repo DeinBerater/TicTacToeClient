@@ -45,7 +45,15 @@ class IQAppCommunicator(
                 println("Now trying to transmit $itemToSend.")
                 transmit(itemToSend)
             } catch (e: DataTransmissionException) {
-                println("Could not transmit $itemToSend: ${e.message}")
+                println("Could not transmit $itemToSend: ${e.message}. Retrying...")
+
+                if (device.status != IQDevice.IQDeviceStatus.CONNECTED) return
+                // Retry transmitting the data if the device is still connected.
+                try {
+                    transmit(itemToSend)
+                } catch (e: Exception) {
+                    println("Retried transmitting $itemToSend, but failed.")
+                }
             } catch (e: TimeoutCancellationException) {
                 println("Timeout reached trying to transmit.")
             }

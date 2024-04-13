@@ -16,7 +16,7 @@ abstract class BaseCommunicator {
     abstract suspend fun connectWithWebsocket()
 
     protected fun getWebSocketUrl(): String {
-        return "ws://192.168.178.121:80"
+        return "wss://tictactoe.sideverse.de:443/"
     }
 
     fun sendSubmitGameCode(gameCode: String) {
